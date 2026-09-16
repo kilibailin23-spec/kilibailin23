@@ -1,0 +1,121 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice">
+  <!--
+    夜里的占位背景图，和 bg.svg 是一对 —— 白天用 bg.svg，18 点之后淡入这张。
+    想换成自己的照片：把夜景照片命名为 bg-night.jpg 放进这个文件夹，
+    打开 index.html 找到 SITE 里的 bgNight，改成 './bg-night.jpg'。
+    换完这个 bg-night.svg 就可以删了。
+
+    画的是同一片天空的夜里 —— 星空 + 月亮 + 云。刻意跟白天那张用同样的
+    构图（云在偏低的位置、光源在右上），这样两张图交叉淡化的时候不会「跳」。
+  -->
+  <defs>
+    <linearGradient id="skyN" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#0a1730"/>
+      <stop offset="35%"  stop-color="#132a4d"/>
+      <stop offset="65%"  stop-color="#1d3f68"/>
+      <stop offset="85%"  stop-color="#2b5680"/>
+      <stop offset="100%" stop-color="#3d6c95"/>
+    </linearGradient>
+    <radialGradient id="moonGlow">
+      <stop offset="0%"   stop-color="#ffffff" stop-opacity="0.55"/>
+      <stop offset="28%"  stop-color="#cfe6ff" stop-opacity="0.24"/>
+      <stop offset="100%" stop-color="#cfe6ff" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="softN" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="20"/>
+    </filter>
+    <filter id="softerN" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="44"/>
+    </filter>
+    <filter id="glowN" x="-200%" y="-200%" width="500%" height="500%">
+      <feGaussianBlur stdDeviation="3.4"/>
+    </filter>
+  </defs>
+
+  <rect width="1600" height="900" fill="url(#skyN)"/>
+
+  <!--
+    星星。半径和透明度都是手写的，不随机 —— 随机的话每次渲染位置都在变，
+    SVG 是要被缓存成一张图的，固定下来才稳定。
+  -->
+  <g fill="#ffffff">
+    <circle cx="138" cy="96"  r="1.7" opacity=".85"/>
+    <circle cx="246" cy="212" r="1.1" opacity=".55"/>
+    <circle cx="318" cy="74"  r="1.4" opacity=".7"/>
+    <circle cx="404" cy="168" r="0.9" opacity=".45"/>
+    <circle cx="512" cy="108" r="1.8" opacity=".9"/>
+    <circle cx="596" cy="246" r="1.2" opacity=".6"/>
+    <circle cx="678" cy="62"  r="1.5" opacity=".75"/>
+    <circle cx="760" cy="180" r="1"   opacity=".5"/>
+    <circle cx="848" cy="98"  r="1.9" opacity=".88"/>
+    <circle cx="926" cy="232" r="1.1" opacity=".55"/>
+    <circle cx="1004" cy="132" r="1.4" opacity=".68"/>
+    <circle cx="1090" cy="58" r="1.2" opacity=".62"/>
+    <circle cx="1168" cy="196" r="0.9" opacity=".42"/>
+    <circle cx="1246" cy="104" r="1.6" opacity=".8"/>
+    <circle cx="1332" cy="228" r="1.1" opacity=".52"/>
+    <circle cx="1420" cy="86" r="1.7" opacity=".84"/>
+    <circle cx="1502" cy="188" r="1.2" opacity=".58"/>
+    <circle cx="76"  cy="316" r="1.3" opacity=".6"/>
+    <circle cx="204" cy="392" r="1"   opacity=".45"/>
+    <circle cx="360" cy="330" r="1.5" opacity=".7"/>
+    <circle cx="472" cy="420" r="1.1" opacity=".5"/>
+    <circle cx="644" cy="366" r="1.3" opacity=".62"/>
+    <circle cx="796" cy="438" r="0.9" opacity=".4"/>
+    <circle cx="948" cy="352" r="1.4" opacity=".66"/>
+    <circle cx="1104" cy="424" r="1.1" opacity=".5"/>
+    <circle cx="1258" cy="374" r="1.2" opacity=".56"/>
+    <circle cx="1404" cy="442" r="1"   opacity=".44"/>
+    <circle cx="1540" cy="338" r="1.3" opacity=".58"/>
+  </g>
+  <!-- 几颗亮星带十字光芒，免得整片星空太均匀 -->
+  <g fill="#ffffff" opacity=".9" filter="url(#glowN)">
+    <circle cx="512" cy="108" r="2.2"/>
+    <circle cx="848" cy="98"  r="2.2"/>
+    <circle cx="1420" cy="86" r="2.2"/>
+  </g>
+
+  <!-- 月亮，位置对着白天那张的太阳 -->
+  <circle cx="1210" cy="240" r="300" fill="url(#moonGlow)"/>
+  <circle cx="1210" cy="240" r="58" fill="#f4f9ff" opacity=".95" filter="url(#softN)"/>
+  <circle cx="1210" cy="240" r="46" fill="#fbfdff"/>
+
+  <!-- 远处云层：比白天更暗更透，才压得住夜色 -->
+  <g fill="#8fb4d8" opacity=".22" filter="url(#softerN)">
+    <ellipse cx="300"  cy="250" rx="270" ry="62"/>
+    <ellipse cx="620"  cy="185" rx="215" ry="48"/>
+    <ellipse cx="1380" cy="360" rx="250" ry="55"/>
+    <ellipse cx="180"  cy="430" rx="200" ry="45"/>
+  </g>
+
+  <!-- 中景云朵 -->
+  <g fill="#a8c8e6" opacity=".3" filter="url(#softN)">
+    <ellipse cx="430"  cy="360" rx="185" ry="58"/>
+    <ellipse cx="525"  cy="332" rx="125" ry="52"/>
+    <ellipse cx="350"  cy="342" rx="105" ry="40"/>
+
+    <ellipse cx="1080" cy="470" rx="215" ry="62"/>
+    <ellipse cx="1195" cy="442" rx="140" ry="55"/>
+    <ellipse cx="975"  cy="452" rx="115" ry="42"/>
+  </g>
+
+  <!-- 近景云朵：月光打在云顶上，所以这层比中景亮 -->
+  <g fill="#c2d9ee" opacity=".42" filter="url(#softN)">
+    <ellipse cx="760"  cy="640" rx="330" ry="78"/>
+    <ellipse cx="940"  cy="600" rx="200" ry="72"/>
+    <ellipse cx="600"  cy="612" rx="165" ry="55"/>
+
+    <ellipse cx="240"  cy="760" rx="300" ry="72"/>
+    <ellipse cx="400"  cy="726" rx="190" ry="60"/>
+  </g>
+
+  <!-- 底部雾气 -->
+  <rect x="0" y="700" width="1600" height="200" fill="#5b87ad" opacity=".14"/>
+
+  <!-- 占位提示，换成自己的图后会自动消失 -->
+  <g opacity=".45">
+    <text x="800" y="862" text-anchor="middle" fill="#cfe6ff"
+          font-family="PingFang SC, Hiragino Sans GB, Microsoft YaHei, sans-serif"
+          font-size="19" letter-spacing="3">占位夜景图 · 换成 bg-night.jpg 即可</text>
+  </g>
+</svg>

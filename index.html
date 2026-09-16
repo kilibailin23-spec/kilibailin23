@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="theme-color" content="#eaf6ff" />
+<title>白麟 · 技术博客</title>
+
+<!-- ============ 改这里：SEO / 分享卡片 ============ -->
+<meta name="description" content="白麟的技术博客 —— 写代码、记笔记、放作品。" />
+<meta name="keywords" content="白麟,技术博客,前端,后端,作品集" />
+<meta name="author" content="白麟" />
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="白麟" />
+<meta property="og:title" content="白麟 · 技术博客" />
+<meta property="og:description" content="写代码、记笔记、放作品。" />
+<!-- 上线后把这两行换成你的真实域名，分享到微信/QQ 才有缩略图 -->
+<meta property="og:url" content="https://example.com/" />
+<meta property="og:image" content="./og-cover.png" />
+<link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+
+
+<!-- ============ 样式：按功能拆成五个文件，都在 styles/ 里 ============ -->
+<link rel="stylesheet" href="./styles/variables.css" />
+<link rel="stylesheet" href="./styles/aero.css" />
+<link rel="stylesheet" href="./styles/layout.css" />
+<link rel="stylesheet" href="./styles/content.css" />
+<link rel="stylesheet" href="./styles/rainbow.css" />
+</head>
+<body>
+
+<!-- 背景：两张照片叠着，靠 html[data-theme] 切透明度做交叉淡化 -->
+<div class="bg-layer bg-day" aria-hidden="true"></div>
+<div class="bg-layer bg-night" aria-hidden="true"></div>
+<div class="bg-veil" aria-hidden="true"></div>
+<!-- 飘在背景上的粒子。canvas 由 bootParticles() 撑满 -->
+<div class="particle-layer" aria-hidden="true"><canvas id="particles"></canvas></div>
+
+<div id="progress"></div>
+
+<!-- 开场动画 -->
+<div id="splash">
+  <div class="blob b1"></div>
+  <div class="blob b2"></div>
+  <div class="blob b3"></div>
+  <div class="plane-wrap">
+    <svg viewBox="0 0 120 120" aria-hidden="true">
+      <defs>
+        <linearGradient id="pg" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#ffffff"/>
+          <stop offset="100%" stop-color="#cfe8fb"/>
+        </linearGradient>
+      </defs>
+      <path d="M4 58 L116 8 L70 114 L54 74 Z" fill="url(#pg)" stroke="#a9d2f2" stroke-width="1.5" stroke-linejoin="round"/>
+      <path d="M4 58 L54 74 L116 8" fill="none" stroke="#9ecbf0" stroke-width="1.5" stroke-linejoin="round"/>
+      <path d="M4 58 L47 89 L54 74 Z" fill="#e6f4ff" stroke="#b6d9f5" stroke-width="1.2" stroke-linejoin="round"/>
+    </svg>
+  </div>
+  <div class="splash-txt">
+    <div class="splash-face" id="sf">( ˘ω˘ )</div>
+    <div class="splash-quote"><span id="sq">正在起飞</span><span class="dots"></span></div>
+  </div>
+</div>
+
+<aside id="rail">
+  <button class="rail-toggle" id="railToggle" type="button"
+          aria-controls="nav" aria-expanded="false" title="展开侧边栏">»</button>
+  <!-- #nav 撑满侧边栏中间那段高度，图标在里面均匀分布（见 CSS）。
+       按钮本身不出盒子，里面的 <a> 由 bootChrome() 生成，
+       render() 里那句 '#nav a' 的选中态切换照旧不用改。 -->
+  <nav id="nav"></nav>
+  <!-- 主题按钮复用 .rail-link 的外观，看起来就是最后一个导航项。
+       里面的图标和文字由 bootTheme() 按当前模式填。 -->
+  <button class="rail-link rail-act" id="themeBtn" type="button"
+          title="切换主题" aria-label="切换主题"></button>
+</aside>
+
+<header>
+  <div class="bar">
+    <!-- 品牌。原来整个是一个 <a>，现在拆成「方块 + 名字链接」两个：
+         方块里要放长按触发的开发者模式按钮，而 <button> 套在 <a> 里是非法的
+         （点按钮会连带触发链接跳转），拆开最省事。
+         短按方块 = 回首页（JS 里补），长按 3 秒 = 彩蛋，见 bootSecret()。
+         解锁之后右键点方块 = 完全恢复（devRelock()）—— 不用先点开齿轮也能撤，
+         不然第一次玩的人点开了就退不回去。 -->
+    <div class="brand">
+      <span class="mark" id="brandMark" role="button" tabindex="0"
+            aria-label="白麟 · 长按 3 秒" title="长按 3 秒…">
+        <!-- 占位字/图片由 boot.js 的 paintMark() 填 -->
+        <span class="mark-face" id="markFace" aria-hidden="true">白</span>
+        <!-- 长按进度环。stroke-dashoffset 从满圈走到 0，正好 3 秒跑完 -->
+        <svg class="mark-ring" viewBox="0 0 44 44" aria-hidden="true">
+          <circle cx="22" cy="22" r="20"></circle>
+        </svg>
+        <!-- 爆炸碎片就撒在这一层里（它自己不占地方，好让碎片往外飞） -->
+        <span class="mark-boom" id="markBoom" aria-hidden="true"></span>
+        <!-- 爆炸后露出来的功能按钮。解锁状态记在 localStorage，下次直接显示 -->
+        <button class="mark-dev" id="markDev" type="button" hidden
+                aria-label="开发者模式" title="开发者模式">⚙</button>
+      </span>
+      <a id="brandName" href="#/">白麟</a>
+    </div>
+    <div class="clock" id="clock"></div>
+    <div class="search">
+      <input id="q" type="search" placeholder="搜索…" autocomplete="off" aria-label="搜索" />
+    </div>
+    <div class="status" id="status"></div>
+  </div>
+</header>
+
+<main id="view"></main>
+
+<footer>
+  <div class="links" id="footLinks"></div>
+  <div id="footText"></div>
+</footer>
+
+
+<!-- ============ 开发者模式的小窗口 ============
+     ⚠️ 先说清楚它不是什么：这里**没有密码**，也不是安全机制。
+        账号密码原来明文写在 data/site.js 里，而那个文件是要一起部署上去的 ——
+        按 F12、或者把网页另存下来就能看到，挡不住任何真想进来的人。
+        零依赖的静态站（双击 index.html 就能开）压根没有「服务器」这一环，
+        「验证」只能发生在访问者自己的浏览器里，也就必然能被绕过。
+        所以这一轮把密码去掉了，只剩一道「别手滑点进来」的入口：
+        顶栏方块长按 3 秒，炸出齿轮，点一下就是开关。
+
+     它真正的作用：把「换图 / 写文章 / 发作品 / 传文件 / 改网站导航」这些
+     会改到你浏览器显示效果的东西，藏在一个不容易误触的入口后面。
+     改的内容也只存在你这台电脑的浏览器里，见 app/util.js 顶上那段说明。
+
+     这个小窗口（#devSheet）是**共用的**：换图、加文件、编辑网站条目都往里塞内容，
+     由 boot.js 的 openSheet() / closeSheet() 填。里面那三个 id
+     （sheetTitle / sheetBody / sheetActions）就是它的接口。
+
+     ⚠️ 必须挂在 <body> 下、**不能放进 #view 里**：
+        main（主内容栏）现在有悬停位移动效，而带 transform 的元素会成为
+        position:fixed 的包含块 —— 小窗口塞在里头会被困在 main 的范围里，
+        定位全乱。右下角那条开发者工具条同理。 -->
+<div class="modal" id="devSheet" hidden>
+  <div class="modal-veil" data-sheet-close></div>
+  <div class="modal-box small" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+    <button class="modal-x" type="button" data-sheet-close aria-label="关闭">×</button>
+    <h2 id="sheetTitle"></h2>
+    <div id="sheetBody"></div>
+    <div class="dev-actions" id="sheetActions"></div>
+  </div>
+</div>
+
+<!-- ============ 开发者模式的浮动工具条 ============
+     只有开发者模式开着的时候才显示（靠 .dev-only 那条 CSS 规则，见 content.css）。
+     为什么需要它：
+       · 换图这一摊里，**背景图不是 <img>**（是 CSS 变量画的），点不到，
+         只能从这儿进去换；
+       · 「我到底在不在开发者模式里」得有个明确的指示，不然页面上光多了一堆
+         按钮，人会犯嘀咕；
+       · 退出得有个顺手的入口 —— 当然，右键点顶栏那个方块也是退出。 -->
+<div class="dev-bar-float dev-only" id="devBar">
+  <span class="dbf-dot" aria-hidden="true"></span>
+  <b>开发者模式</b>
+  <button class="dev-btn sm" type="button" id="devBarImgs">站点图片</button>
+  <button class="dev-btn sm ghost" type="button" id="devBarOff">退出</button>
+</div>
+
+<!-- ============ 脚本：先数据（data/）后逻辑（app/），顺序不能换 ============
+     defer 保证它们按下面写的顺序执行，所以 data 一定先于 app 就绪。
+     注意：这些文件不能改成 .json —— 双击打开时是 file:// 协议，
+     fetch 本地 json 会被浏览器拦掉，所以数据写成 .js 里的 const。 -->
+<script src="./data/site.js" defer></script>
+<script src="./data/icons.js" defer></script>
+<script src="./data/posts.js" defer></script>
+<script src="./data/categories.js" defer></script>
+<script src="./data/works.js" defer></script>
+<script src="./data/files.js" defer></script>
+<script src="./data/sites.js" defer></script>
+<script src="./app/util.js" defer></script>
+<script src="./app/views.js" defer></script>
+<script src="./app/router.js" defer></script>
+<script src="./app/boot.js" defer></script>
+</body>
+</html>

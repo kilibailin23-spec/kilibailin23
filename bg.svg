@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid slice">
+  <!--
+    这是占位背景图。想换成自己的照片：
+    1. 把照片命名为 bg.jpg 放进这个文件夹
+    2. 打开 index.html，找到 SITE 里的 bgImage，改成 './bg.jpg'
+    换完这个 bg.svg 就可以删了。
+  -->
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#54a6e0"/>
+      <stop offset="30%"  stop-color="#86c4ee"/>
+      <stop offset="58%"  stop-color="#a5d8f4"/>
+      <stop offset="80%"  stop-color="#d5eefc"/>
+      <stop offset="100%" stop-color="#f2fbff"/>
+    </linearGradient>
+    <radialGradient id="sunGlow">
+      <stop offset="0%"   stop-color="#ffffff" stop-opacity="0.92"/>
+      <stop offset="35%"  stop-color="#ffffff" stop-opacity="0.34"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="haze">
+      <stop offset="0%"   stop-color="#ffffff" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="soft" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="22"/>
+    </filter>
+    <filter id="softer" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="46"/>
+    </filter>
+  </defs>
+
+  <rect width="1600" height="900" fill="url(#sky)"/>
+
+  <!-- 太阳光晕 -->
+  <circle cx="1210" cy="240" r="360" fill="url(#sunGlow)"/>
+  <circle cx="1210" cy="240" r="120" fill="#ffffff" opacity="0.55" filter="url(#soft)"/>
+
+  <!-- 远处云层 -->
+  <g fill="#ffffff" opacity="0.42" filter="url(#softer)">
+    <ellipse cx="300"  cy="250" rx="270" ry="62"/>
+    <ellipse cx="620"  cy="185" rx="215" ry="48"/>
+    <ellipse cx="1380" cy="360" rx="250" ry="55"/>
+    <ellipse cx="180"  cy="430" rx="200" ry="45"/>
+  </g>
+
+  <!-- 中景云朵 -->
+  <g fill="#ffffff" opacity="0.72" filter="url(#soft)">
+    <ellipse cx="430"  cy="360" rx="185" ry="58"/>
+    <ellipse cx="525"  cy="332" rx="125" ry="52"/>
+    <ellipse cx="350"  cy="342" rx="105" ry="40"/>
+
+    <ellipse cx="1080" cy="470" rx="215" ry="62"/>
+    <ellipse cx="1195" cy="442" rx="140" ry="55"/>
+    <ellipse cx="975"  cy="452" rx="115" ry="42"/>
+  </g>
+
+  <!-- 近景云朵 -->
+  <g fill="#ffffff" opacity="0.9" filter="url(#soft)">
+    <ellipse cx="760"  cy="640" rx="330" ry="78"/>
+    <ellipse cx="940"  cy="600" rx="200" ry="72"/>
+    <ellipse cx="600"  cy="612" rx="165" ry="55"/>
+
+    <ellipse cx="240"  cy="760" rx="300" ry="72"/>
+    <ellipse cx="400"  cy="726" rx="190" ry="60"/>
+  </g>
+
+  <!-- 底部雾气 -->
+  <rect x="0" y="700" width="1600" height="200" fill="url(#haze)"/>
+
+  <!-- 占位提示，换成自己的图后会自动消失 -->
+  <g opacity="0.5">
+    <text x="800" y="862" text-anchor="middle" fill="#1f5f96"
+          font-family="PingFang SC, Hiragino Sans GB, Microsoft YaHei, sans-serif"
+          font-size="19" letter-spacing="3">占位背景图 · 换成 bg.jpg 即可</text>
+  </g>
+</svg>

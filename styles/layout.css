@@ -1,0 +1,456 @@
+/* ==========================================================================
+   布局与卡片
+
+   页面骨架、首屏英雄区、首页那一整块大面板、卡片、文章列表与正文、下载列表。
+
+   这个文件是从原来的单文件 index.html 里拆出来的，内容没动过。
+   ========================================================================== */
+
+/* ==========================================================================
+   布局
+   ========================================================================== */
+main{max-width:var(--maxw);margin:0 auto;padding:46px 22px 96px;min-height:62vh}
+.view{animation:rise .5s var(--anim) both}
+@keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+
+/* ---- 英雄区 ---- */
+/* isolation 把负 z-index 的伪元素关在 .hero 自己的层叠上下文里，
+   不然它会钻到页面根背景底下，看不见。
+   .hero 本身没背景，::before 就是那团白色光晕，压在面板的彩虹上面，
+   把标题正后方的色带洗淡一点，字不会因为底下有彩色而变难读。 */
+.hero{position:relative;isolation:isolate;padding:30px 0 50px}
+.hero::before{
+  content:'';position:absolute;z-index:-1;
+  inset:-50px -70px -30px -70px;
+  border-radius:50%;
+  background:radial-gradient(closest-side, var(--hero-scrim), transparent 78%);
+  pointer-events:none;
+}
+/* 彩虹镀膜不在这儿了 —— 它现在长在 .home-panel 上，见 styles/rainbow.css。
+   首屏那行大字背后的彩色是面板那层透上来的，不用单独再铺一道
+   （铺两道会叠得更重，而且面板那道是视口锚定的，自己再来一道就不连续了）。 */
+.hero h1{
+  font-size:clamp(2.05rem,5.6vw,3.25rem);line-height:1.18;margin:0 0 16px;
+  letter-spacing:-.6px;font-weight:800;
+}
+/* 名字用「黑色文字 + 浅蓝荧光笔」——浅蓝不用来做文字色，不然白底上看不清 */
+.hero h1 .grad{
+  background:linear-gradient(180deg,transparent 64%,var(--sky-300) 64%);
+  padding:0 .12em;margin:0 -.02em;
+  border-radius:4px;
+}
+html[data-theme="dark"] .hero h1 .grad{
+  background:linear-gradient(180deg,transparent 64%,rgba(143,203,241,.30) 64%);
+}
+.hero p{font-size:1.08rem;color:var(--muted);max-width:60ch;margin:0 0 26px}
+.btn-row{display:flex;gap:12px;flex-wrap:wrap}
+.btn{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:11px 21px;border-radius:8px;font-size:.95rem;font-weight:650;
+  border:1px solid transparent;cursor:pointer;
+  transition:transform .2s,box-shadow .2s,background .2s,border-color .2s;
+}
+.btn:hover{transform:translateY(-2px);text-decoration:none}
+/* 主按钮：浅蓝底 + 黑字。浅蓝配白字对比度不够，会糊成一团 */
+.btn.primary{
+  background:linear-gradient(135deg,var(--sky-300),var(--sky-200));
+  color:var(--ink);
+  border-color:rgba(143,203,241,.7);
+  box-shadow:0 10px 26px rgba(102,181,234,.38), inset 0 1px 0 rgba(255,255,255,.75);
+}
+.btn.primary:hover{box-shadow:0 16px 36px rgba(102,181,234,.5), inset 0 1px 0 rgba(255,255,255,.75)}
+.btn.ghost{
+  background:var(--panel);
+  border-color:var(--panel-line);
+  color:var(--text);
+  box-shadow:var(--panel-shadow);
+  -webkit-backdrop-filter:blur(var(--blur));
+  backdrop-filter:blur(var(--blur));
+}
+.btn.ghost:hover{border-color:var(--panel-ring);box-shadow:var(--panel-shadow-lg)}
+
+/* ---- 首页那一整块内容面板 ----
+   参考站的首屏是**一整块**大玻璃：打招呼、最新动态、快捷导航、作品
+   全装在同一个盒子里，中间用细线断开。我们原来是 hero 单独浮在上面，
+   把下面的「最新动态」压掉了半截 —— 现在全部收进这一个盒子。
+   材质写法跟 .card 一样（background 必须拆成 background-color +
+   background-image，否则会被 hover 的简写冲掉）。
+
+   方格纹理**不在这块大板上** —— 参考站只有主内容里那些小格子（.card）才铺网格，
+   大面板和顶栏、侧边栏都是干净的一片。之前大板上也铺了，看着像整张稿纸，
+   和参考站对不上。网格现在只有 .card 一处。 */
+.home-panel{
+  background-color:var(--panel);
+  background-image:var(--glass-sheen);
+  border:1px solid var(--panel-line);
+  border-radius:var(--radius);
+  box-shadow:var(--panel-shadow), var(--glass-bevel);
+  -webkit-backdrop-filter:blur(var(--blur));
+  backdrop-filter:blur(var(--blur));
+  padding:34px 30px 30px;
+  /* 裁掉 hero 那两个负 inset 的装饰伪元素，光晕和彩虹就收在面板里，
+     不会糊到面板外面去 */
+  overflow:hidden;
+}
+/* 面板里的每一节：归零原来的大间距，改用一条细线分隔。
+   比单纯留白更能读出「这几节是同一个盒子里的」。 */
+.home-panel section{
+  margin:0;padding-top:30px;
+  border-top:1px solid var(--panel-line);
+}
+/* ---- 首页抬头：面板最上面那行站名大字 ----
+   布局照参考站的首屏来：横幅 → 关于我 → 联系方式 → 最新动态 → 快捷导航 → 作品，
+   全部装在上面那一个 .home-panel 里，靠细线分节。
+
+   这行大字仍然挂着 .hero 类 —— 不是为了它的排版，是为了那层彩虹镀膜和光晕
+   （见上面「英雄区」）。参考站是把横幅单独做成一张卡浮在面板外面，
+   我们要保持「一整块面板」，所以把它收进面板当抬头。
+   这里的选择器带了 .home-panel 前缀，就是为了压过 .hero h1 自己的字号和左对齐。 */
+.home-panel .home-banner{
+  display:grid;place-items:center;
+  padding:6px 0 26px;text-align:center;
+}
+/* 字体和字号由 SITE.bannerFont / SITE.bannerSize 决定，bannerHTML() 把它们
+   写成这个 h1 上的行内变量。没写就用逗号后面那个默认值，也就是原样。 */
+.home-panel .home-banner h1{
+  margin:0;
+  font-family:var(--banner-font,var(--font));
+  font-size:var(--banner-size,clamp(2.2rem,5.6vw,3.4rem));
+  letter-spacing:3px;line-height:1.15;
+  color:var(--accent);
+  text-shadow:0 3px 20px rgba(102,181,234,.3);
+}
+html[data-theme="dark"] .home-panel .home-banner h1{
+  text-shadow:0 3px 22px rgba(120,190,240,.34);
+}
+
+/* ---- 关于我：头像 | 打招呼 + 简介 + 社交 | 签名 ----
+   三栏照抄参考站的比例（左固定、中自适应、右固定），窄屏逐级降成两栏、一栏。 */
+.home-about{
+  display:grid;grid-template-columns:190px 1fr 180px;
+  align-items:center;gap:26px;
+  padding:26px 0 30px;
+}
+/* 头像 + 下面那行名字。名字在头像底下，所以这里竖着排（参考站也是那样）。
+   这圈是个「硬币」：点一下绕竖轴翻 180°，翻到背面那张图（见下面 .ha-flip 那段）。 */
+.ha-avatar{
+  width:172px;height:172px;border-radius:50%;
+  border:3px solid rgba(102,181,234,.35);
+  box-shadow:0 10px 30px rgba(102,181,234,.22);
+  justify-self:center;
+  font-size:3.4rem;font-weight:800;color:var(--ink);
+  cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;
+  /* 3D 的景深：不写 perspective 的话 rotateY 会被当成平面压扁，
+     转起来是「缩成一条线」而不是「翻过去」。值越小透视越夸张，
+     800px 配 172px 的圆刚刚好，有立体感又不会变形。 */
+  perspective:800px;
+}
+.ha-avatar:focus-visible{outline:2px solid var(--sky-500);outline-offset:4px}
+/* 硬币本体。两面都挂在它身上，转它就等于转整枚硬币。
+   transform-style 必须写：不写的话两个面各自被压平，
+   背面那个会一直正着贴在同一层上，翻过去看到的还是正面。 */
+.ha-flip{
+  position:relative;width:100%;height:100%;border-radius:50%;
+  transform-style:preserve-3d;
+  transition:transform .7s cubic-bezier(.3,.9,.3,1);
+}
+.ha-avatar.is-flipped .ha-flip{transform:rotateY(180deg)}
+/* 一面。两面都绝对定位叠在同一处，各自 backface-visibility:hidden ——
+   转过去背对自己的那一面自动不画，不然会透过来看到反的字。
+   圆角和外溢裁切从 .ha-avatar 挪到了这里：
+   容器上留着 overflow:hidden 的话，转动的面会在半路被切掉一条边。 */
+.ha-face{
+  position:absolute;inset:0;border-radius:50%;overflow:hidden;
+  display:grid;place-items:center;
+  background:linear-gradient(135deg,var(--sky-200),var(--sky-400));
+  backface-visibility:hidden;-webkit-backface-visibility:hidden;
+}
+.ha-back{transform:rotateY(180deg)}
+/* 占位字和图塞进同一格，图盖在字上面。图挂了（onerror 把自己 hidden）
+   就露出底下的字，不会剩一个裂图。 */
+.ha-face > *{grid-area:1/1}
+.ha-face img{width:100%;height:100%;object-fit:cover;display:block}
+/* 系统开了「减少动态效果」就别翻了，直接换图（过渡已经被全局那条摁到 0.01ms） */
+@media (prefers-reduced-motion:reduce){
+  .ha-flip{transition:none}
+}
+.ha-name{
+  margin:0;font-size:.95rem;font-weight:600;letter-spacing:.6px;
+  color:var(--muted);text-align:center;
+}
+.ha-body{min-width:0}
+.ha-headline{
+  font-size:clamp(1.15rem,2.4vw,1.6rem);line-height:1.5;
+  margin:0 0 14px;font-weight:700;
+}
+.ha-line{font-size:.98rem;line-height:1.75;color:var(--muted);margin:5px 0}
+.ha-socials{display:flex;gap:12px;flex-wrap:wrap;margin-top:20px}
+.ha-social{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:9px 16px;border-radius:10px;
+  background:var(--panel-soft);border:1px solid var(--panel-line);
+  font-size:.9rem;font-weight:600;color:var(--text);
+  transition:transform .2s,background .2s,border-color .2s;
+}
+.ha-social:hover{transform:translateY(-3px);background:var(--panel-strong);border-color:var(--panel-ring);text-decoration:none}
+.ha-social .ico-img{font-size:1.1rem}
+.ha-side{text-align:center}
+.ha-sign{
+  margin:0;font-size:1.24rem;line-height:1.6;color:var(--accent);
+  font-weight:600;letter-spacing:1px;
+}
+/* 落款另起一行，字比签名小一号、不用强调色，免得跟签名抢 */
+.ha-sign-to{
+  display:block;margin-top:8px;
+  font-size:.86rem;font-weight:500;letter-spacing:0;color:var(--muted);
+}
+
+/* ---- 联系方式那一条 ----
+   参考站把它做成一条窄的横向玻璃条，横在两节之间当分隔，比再开一个 section 轻。 */
+.home-contact{
+  display:flex;align-items:center;justify-content:center;
+  gap:14px;flex-wrap:wrap;
+  margin:0;padding:12px 18px;
+  border-radius:var(--radius-sm);
+  background:var(--panel-soft);
+  border:1px solid var(--panel-line);
+  -webkit-backdrop-filter:blur(var(--blur));
+  backdrop-filter:blur(var(--blur));
+  font-size:.92rem;
+}
+.home-contact .hc-title{color:var(--accent);letter-spacing:1px;font-weight:600}
+.home-contact .hc-note{color:var(--muted)}
+.home-contact a{color:var(--link)}
+
+@media (max-width:1080px){
+  .home-about{grid-template-columns:150px 1fr}
+  .ha-avatar{width:140px;height:140px;font-size:2.8rem}
+  .ha-side{grid-column:1 / -1;text-align:right}
+}
+@media (max-width:720px){
+  .home-about{grid-template-columns:1fr;justify-items:center;text-align:center;gap:18px}
+  .ha-socials{justify-content:center}
+  .ha-side{text-align:center}
+}
+
+.sec-head{display:flex;align-items:baseline;gap:12px;margin:0 0 20px}
+.sec-head h2{font-size:1.36rem;margin:0;font-weight:780;letter-spacing:-.2px}
+/* 小节标题前面那个小图标。跟文字同一行，所以走 inline-flex + 视觉下移，
+   不用基线对齐 —— mask 出来的方块没有基线，对齐会偏。
+   字号缩到 .88em，图标本体（1.25em）落下来就跟字高差不多。 */
+.sec-ico{
+  display:inline-flex;align-items:center;
+  font-size:.88em;color:var(--accent);
+  margin-right:.42em;vertical-align:-.06em;
+}
+.sec-head .more{margin-left:auto;font-size:.9rem;color:var(--muted)}
+section{margin-bottom:60px}
+
+/* ---- 卡片 ---- */
+.grid{display:grid;gap:18px;grid-template-columns:repeat(auto-fill,minmax(280px,1fr))}
+/* 分类卡比文章卡窄，一排放得下更多 */
+.grid.cats{grid-template-columns:repeat(auto-fill,minmax(168px,1fr))}
+.card{
+  background-color:var(--panel);
+  /* 方格纸纹理走 background-image 分层，不用 ::after ——
+     绝对定位的伪元素会盖在没定位的正文上面，还得跟 z-index 打架。
+     也正因为要保留 background-image，这里的 background 必须是简写拆开的
+     background-color，hover 那处同理，否则纹理会整个被冲掉。 */
+  background-image:
+    var(--glass-sheen),
+    repeating-linear-gradient(0deg,  var(--grid-line) 0 1px, transparent 1px 22px),
+    repeating-linear-gradient(90deg, var(--grid-line) 0 1px, transparent 1px 22px);
+  border:1px solid var(--panel-line);
+  border-radius:var(--radius);
+  padding:22px;
+  box-shadow:var(--panel-shadow), var(--glass-bevel);
+  -webkit-backdrop-filter:blur(var(--blur));
+  backdrop-filter:blur(var(--blur));
+  /* 缓动曲线换成他全站统一那条；时长也照他给到 .3s */
+  transition:all .3s var(--anim);
+  display:flex;flex-direction:column;
+  position:relative;
+  overflow:hidden;
+}
+/* 卡片顶部一道高光，玻璃感来源 */
+.card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:1px;z-index:1;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.9),transparent);
+  opacity:.9;
+}
+html[data-theme="dark"] .card::before{background:linear-gradient(90deg,transparent,rgba(140,200,250,.35),transparent)}
+.card:hover{
+  /* 位移照他：-2px，不是我们原来的 -5px */
+  transform:translateY(-2px);
+  box-shadow:var(--panel-shadow-lg), var(--glass-bevel);
+  border-color:var(--panel-ring);
+  background-color:var(--panel-strong);
+}
+/* 按下的反馈也是他的：轻微缩小 + 变透一点 */
+.card:active{transform:scale(.995);opacity:.9}
+.card h3{margin:0 0 8px;font-size:1.06rem;font-weight:720;line-height:1.45}
+.card h3 a{color:var(--text)}
+.card p{margin:0;color:var(--muted);font-size:.92rem;flex:1}
+
+/* ---- 卡片封面图：负 margin 出血到卡片边缘 ---- */
+.card .cover{
+  /* 封面自己开一个层叠上下文。不要用 z-index:-1 ——那要求 .card 是层叠上下文，
+     而 .card 只是因为 backdrop-filter 才碰巧是。走 @supports 兜底（无毛玻璃）时
+     它就不是了，负层级会把封面压到卡片背景底下，图整个看不见。
+     isolation 不挑父级，而且顺带把 hover 的 img 缩放关在里面，
+     不会因为 transform 跑到正文上面去。 */
+  isolation:isolate;
+  margin:-22px -22px 16px;
+  border-radius:calc(var(--radius) - 1px) calc(var(--radius) - 1px) 0 0;
+  overflow:hidden;
+  aspect-ratio:16/9;
+  background:linear-gradient(135deg,var(--sky-200),var(--sky-400));
+}
+.card .cover img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .5s var(--anim)}
+.card:hover .cover img{transform:scale(1.04)}
+/* 没填 cover 时的占位：浅蓝渐变 + 标题首字。
+   这里不能用 var(--ink) —— 暗色下它会翻成白的，压在这块始终是浅色的渐变上就糊了。
+   --sky-* 不参与暗色重映射，取最深那档，两套主题下都读得清。 */
+.card .cover.ph{display:grid;place-items:center}
+.card .cover.ph span{font-size:2.3rem;font-weight:800;color:var(--sky-700);opacity:.7;user-select:none}
+
+.meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:.82rem;color:var(--muted);margin-bottom:10px}
+.chip{
+  display:inline-block;padding:3px 10px;border-radius:20px;font-size:.76rem;
+  background:var(--panel-soft);
+  border:1px solid var(--panel-line);
+  /* 用 --text 而不是 --ink：标签的底是 --panel-soft，会跟着主题变深变浅，
+     字色也得跟着走。--ink 是那个「永远偏黑」的墨色（给浅蓝按钮上的黑字用的），
+     暗色主题下不会翻白，写在这儿就是黑底黑字，标签整个看不见。
+     （带链接的标签有 a.chip{color:var(--text)} 单独兜着，所以只有
+       <span class="chip"> 那种会消失 —— 作品区的标签就是这样，别被带偏了。） */
+  color:var(--text);
+  white-space:nowrap;
+  -webkit-backdrop-filter:blur(var(--blur));
+  backdrop-filter:blur(var(--blur));
+}
+.chips{display:flex;gap:7px;flex-wrap:wrap;margin-top:14px}
+
+/* ---- 文章列表 ---- */
+.post-list{display:flex;flex-direction:column;gap:6px}
+.post-row{
+  display:flex;gap:18px;align-items:baseline;
+  padding:17px 18px;border-radius:8px;
+  border:1px solid transparent;
+  transition:background .2s,border-color .2s,padding-left .2s,box-shadow .2s,transform .2s;
+}
+.post-row:hover{
+  background:var(--panel);
+  background-image:var(--glass-sheen);
+  border-color:var(--panel-line);
+  padding-left:24px;
+  text-decoration:none;
+  box-shadow:var(--panel-shadow), var(--glass-bevel);
+  -webkit-backdrop-filter:blur(var(--blur));
+  backdrop-filter:blur(var(--blur));
+}
+.post-row .t{font-weight:670;color:var(--text);font-size:1.02rem}
+.post-row .d{margin-left:auto;color:var(--muted);font-size:.85rem;white-space:nowrap;font-family:var(--mono)}
+
+/* ---- 文章正文 ---- */
+.article{max-width:76ch}
+.article h1{font-size:clamp(1.65rem,4vw,2.35rem);line-height:1.3;margin:.2em 0 .45em;font-weight:820;letter-spacing:-.4px}
+.article .body{
+  margin-top:34px;font-size:1.03rem;
+  background:var(--panel-soft);
+  background-image:var(--glass-sheen);
+  border:1px solid var(--panel-line);
+  border-radius:var(--radius);
+  padding:34px 38px;
+  box-shadow:var(--panel-shadow), var(--glass-bevel);
+  -webkit-backdrop-filter:blur(var(--blur));
+  backdrop-filter:blur(var(--blur));
+}
+.article .body h2{font-size:1.3rem;margin:1.9em 0 .6em;padding-bottom:.32em;border-bottom:1px solid var(--panel-line);font-weight:760}
+.article .body h2:first-child{margin-top:0}
+/* 目录点过来时给吸顶的顶栏留出空档，不然标题会被盖住 */
+.article .body h2,.article .body h3{scroll-margin-top:84px}
+.article .body h3{font-size:1.12rem;margin:1.6em 0 .5em;font-weight:720}
+.article .body p{margin:0 0 1.15em}
+.article .body ul,.article .body ol{margin:0 0 1.15em;padding-left:1.4em}
+.article .body li{margin:.35em 0}
+.article .body blockquote{
+  margin:1.4em 0;padding:.9em 1.2em;
+  border-left:3px solid var(--sky-400);
+  background:var(--panel);
+  border-radius:0 8px 8px 0;
+  color:var(--muted);
+  -webkit-backdrop-filter:blur(var(--blur));
+  backdrop-filter:blur(var(--blur));
+}
+/* 正文插图不走 --panel-shadow：那里面有一道白色外发光，
+   套在照片上就是一圈光晕，很难看。这里只要一点厚度。 */
+.article .body img{
+  border-radius:8px;margin:1.4em 0;
+  box-shadow:0 2px 6px rgba(23,25,28,.06), 0 12px 30px rgba(23,25,28,.10);
+}
+.article .body code{
+  font-family:var(--mono);font-size:.88em;
+  background:var(--panel-strong);
+  border:1px solid var(--panel-line);
+  padding:2px 7px;border-radius:4px;
+}
+.article .body pre{
+  background:var(--panel-strong);
+  border:1px solid var(--panel-line);
+  border-radius:8px;
+  padding:18px 20px;overflow-x:auto;margin:1.4em 0;
+  box-shadow:var(--panel-shadow);
+  -webkit-backdrop-filter:blur(var(--blur));
+  backdrop-filter:blur(var(--blur));
+}
+.article .body pre code{background:none;border:0;padding:0;font-size:.86rem;line-height:1.72}
+.back{display:inline-flex;align-items:center;gap:6px;color:var(--muted);font-size:.9rem;margin-bottom:20px}
+.back:hover{color:var(--link-hover)}
+
+/* ---- 下载 ---- */
+.dl{
+  display:flex;align-items:center;gap:16px;
+  background:var(--panel);
+  border:1px solid var(--panel-line);
+  border-radius:var(--radius);
+  padding:18px 20px;
+  box-shadow:var(--panel-shadow), var(--glass-bevel);
+  -webkit-backdrop-filter:blur(var(--blur));
+  backdrop-filter:blur(var(--blur));
+  transition:transform .22s,box-shadow .22s,border-color .22s,background .22s;
+}
+.dl:hover{
+  transform:translateY(-4px);
+  box-shadow:var(--panel-shadow-lg);
+  border-color:var(--panel-ring);
+  background:var(--panel-strong);
+}
+.dl .ico{
+  width:46px;height:46px;flex:0 0 auto;border-radius:8px;display:grid;place-items:center;
+  background:var(--panel-soft);
+  border:1px solid var(--panel-line);
+  font-size:1.18rem;
+}
+.dl .info{min-width:0;flex:1}
+.dl .info b{display:block;font-weight:700;font-size:.99rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dl .info small{color:var(--muted);font-size:.83rem}
+.dl .get{
+  flex:0 0 auto;padding:9px 18px;border-radius:6px;font-size:.88rem;font-weight:700;
+  background:linear-gradient(135deg,var(--sky-300),var(--sky-200));
+  color:var(--ink);
+  border:1px solid rgba(143,203,241,.7);
+  box-shadow:0 6px 16px rgba(102,181,234,.35), inset 0 1px 0 rgba(255,255,255,.75);
+  transition:transform .18s,box-shadow .18s;
+}
+.dl .get:hover{text-decoration:none;transform:translateY(-1px);box-shadow:0 10px 22px rgba(102,181,234,.48), inset 0 1px 0 rgba(255,255,255,.75)}
+
+.empty{
+  text-align:center;color:var(--muted);padding:58px 20px;
+  border:1px dashed var(--panel-line);border-radius:var(--radius);
+  background:var(--panel-soft);
+  -webkit-backdrop-filter:blur(var(--blur));
+  backdrop-filter:blur(var(--blur));
+}
+.empty .big{font-size:1.9rem;margin-bottom:8px}
+

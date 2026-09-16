@@ -1,0 +1,89 @@
+/* ==========================================================================
+   彩虹镀膜 —— 全站玻璃面板共用的一份
+
+   参考站的做法值得照抄：整站只有**一片**彩虹，position:fixed 铺满视口，
+   每块玻璃各开一扇窗去看这片彩虹（它用 clip-path 开窗）。
+   所有窗口看到的是同一片，所以彩虹连得上 —— 一块板子上被切掉的那段，
+   在隔壁那块上接着，连起来还是同一条。
+
+   我们不用 clip-path。开窗得拿 JS 量每块板子的位置，还得跟着滚动、窗口缩放、
+   侧边栏收展实时更新 —— 主内容面板是跟着页面滚的，那就是每滚一帧都要重算，
+   又卡又容易错位。
+
+   这里用 background-attachment:fixed 达到同样的效果：背景不跟着元素走，
+   而是钉在视口上，于是所有面板取样的是同一个坐标系，画出来自然对得上。
+   零 JS，滚动时彩虹会「从面板上流过去」，正是全息反光该有的样子。
+
+   ⚠️ 两个别踩的坑：
+   1. 别改成默认的 background-attachment:scroll。那样每块板子都从自己的
+      左上角重新数一遍色带，各画各的，就又变成「一块一块不一样的彩虹」了。
+   2. 别再用 closest-side 的椭圆 mask 收边（第一版就是这么写的，踩过）：
+      顶栏是个又扁又长的盒子，椭圆会被拉得横跨整条，中间那点透明区根本
+      盖不住 —— 整条顶栏会变成一面彩虹旗。现在不收形状，靠颜色本身的
+      透明度（见 variables.css 里 --reflection-* 的注释）来保证不刺眼。
+
+   —— 哪几块板子镀了 ——
+   原则是「凡是看起来像一块玻璃板的都镀」：
+     · 顶栏、侧边栏、首页大面板、页脚整条、文章目录、正文那块 —— 整份
+     · 文章卡 / 分类卡 / 首页那条「联系我」            —— 打折（见下面的 --rb-scale）
+   小控件（.chip 标签、.icon-btn 图标按钮、搜索框、.ha-social 那排胶囊、
+   .copy-btn 复制按钮）**不镀** —— 它们读起来是「控件」不是「玻璃板」，
+   镀了会像一个个亮着的小灯。弹窗（.modal-box）也不镀：它浮在遮罩上面，
+   属于另一个层级，跟着页面一起反光反而怪。
+   ========================================================================== */
+header::after,
+#rail::after,
+.home-panel::after,
+.card::after,
+.cat-card::after,
+.home-contact::after,
+.toc::after,
+.article .body::after,
+footer::after{
+  content:'';position:absolute;inset:0;z-index:-2;pointer-events:none;
+  border-radius:inherit;
+  background-image:var(--reflection-gradients);
+  background-attachment:fixed;
+  /* 整体强度留一个旋钮（:root 里的 --rainbow-alpha，嫌重/嫌淡只动那一个值），
+     --rb-scale 是「叠在别人镀膜上」的面板要打的折，见下一条。 */
+  opacity:calc(var(--rainbow-alpha) * var(--rb-scale, 1));
+}
+
+/* 负 z-index 的伪元素只关得住「有层叠上下文」的父级里。
+   不写 isolation 的话它会一路钻到页面根背景底下，整块直接看不见。
+   （header 在 aero.css 里、.card 的封面在 layout.css 里本来就有，这里补齐其余的。） */
+header,
+#rail,
+.home-panel,
+.card,
+.cat-card,
+.home-contact,
+.toc,
+.article .body,
+footer{isolation:isolate}
+
+/* inset:0 得有个定位祖先，才量得准是「自己这块板」。
+   不写的话会退到初始包含块（视口）上去 —— 反正镀膜是 fixed 的，画出来差不多，
+   但 border-radius:inherit 的四个角会落到错的地方。
+   （.card 在 layout.css 里本来就是 relative，不用重复写。） */
+.home-panel,
+.cat-card,
+.home-contact,
+.toc,
+.article .body,
+footer{position:relative}
+
+/* 叠在父级镀膜上面的板子要打个折。
+   它们底下那层玻璃已经镀过一次了，而卡面是半透明的，父级那条彩虹会透上来 ——
+   卡片自己是 60% 实心，等于白捡了四成的父级彩虹。不减一份的话，
+   卡片会比周围的面板亮一截，正好又变成「一块一块的」。
+   折扣约等于「1 − 卡面不透明度」，加起来刚好回到和父级一样亮。
+   注意 .card 只在**首页大面板里**才是叠着的，别的页它直接躺在页面背景上，
+   所以用后代选择器挑，别一刀切。 */
+.home-panel .card,
+.home-panel .cat-card,
+.home-contact{--rb-scale:.55}
+
+/* 暗色主题下不额外改彩虹本身就 —— variables.css 里那三份 --reflection-*
+   已经按主题给了不同颜色，这边自动跟着变。
+   （暗色那份比浅色那份压得更狠，原因写在那边。） */

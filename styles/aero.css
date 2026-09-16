@@ -1,0 +1,431 @@
+/* ==========================================================================
+   毛玻璃外壳
+
+   开场动画、侧边栏（可展开的抽屉）、顶栏。
+   这三块都是「浮在内容上面的玻璃」，材质变量从 variables.css 来。
+
+   这个文件是从原来的单文件 index.html 里拆出来的，内容没动过。
+   ========================================================================== */
+
+/* ==========================================================================
+   开场动画
+   ========================================================================== */
+#splash{
+  position:fixed; inset:0; z-index:9999;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  overflow:hidden;
+  background-color:var(--bg);
+  background-image:var(--bg-grad);
+  transition:opacity .75s var(--anim), transform .75s var(--anim);
+}
+#splash.gone{opacity:0;transform:scale(1.06);pointer-events:none}
+.blob{
+  position:absolute;border-radius:42% 58% 66% 34%/44% 52% 48% 56%;
+  background:rgba(255,255,255,.72);filter:blur(14px);
+  animation:morph 9s ease-in-out infinite alternate;
+}
+html[data-theme="dark"] .blob{background:rgba(90,165,235,.13)}
+@media (prefers-color-scheme:dark){
+  html:not([data-theme="light"]) .blob{background:rgba(90,165,235,.13)}
+}
+.blob.b1{width:340px;height:340px;top:6%;left:10%}
+.blob.b2{width:440px;height:440px;bottom:4%;right:6%;animation-delay:-3.5s;opacity:.7}
+.blob.b3{width:240px;height:240px;bottom:20%;left:20%;animation-delay:-6s;opacity:.5}
+@keyframes morph{
+  0%{border-radius:42% 58% 66% 34%/44% 52% 48% 56%;transform:rotate(0) scale(1)}
+  100%{border-radius:62% 38% 32% 68%/52% 62% 38% 48%;transform:rotate(48deg) scale(1.12)}
+}
+.plane-wrap{position:relative;z-index:1;animation:float 3.4s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-16px)}}
+.plane-wrap svg{width:136px;height:136px;filter:drop-shadow(0 12px 24px rgba(102,181,234,.30))}
+.splash-txt{position:relative;z-index:1;margin-top:34px;text-align:center;padding:0 20px}
+.splash-face{font-size:1.45rem;font-weight:700;letter-spacing:2px;margin-bottom:6px;color:var(--accent)}
+.splash-quote{font-size:.94rem;color:var(--muted);min-height:1.6em}
+.dots::after{content:'';animation:dots 1.4s steps(4,end) infinite}
+@keyframes dots{0%{content:''}25%{content:'.'}50%{content:'.'}75%{content:'..'}100%{content:'...'}}
+
+/* ==========================================================================
+   侧边栏（可展开的抽屉）
+   浮在顶栏下面，四周留缝、圆角、带阴影。栏本身 fixed，主内容靠 body 的
+   padding-left 让位 —— 这样 header/main/footer 的居中逻辑一行都不用动。
+   收/展只改 --rail 一个变量（见上面的 html[data-rail="open"]），
+   栏宽和让位宽度是一起动的。窄屏时整条栏转到底部变成横向。
+   ========================================================================== */
+#rail{
+  position:fixed;
+  left:var(--rail-gap);
+  /* 顶栏现在浮在离窗口顶 --edge 的位置，所以侧边栏得从「那道缝 + 顶栏高度 +
+     又一道缝」开始算。--bar-h 由 syncBarH() 量出来，不含 --edge。 */
+  top:calc(var(--edge) + var(--bar-h) + var(--rail-gap));
+  bottom:var(--rail-gap);
+  width:var(--rail);z-index:55;
+  display:flex;flex-direction:column;align-items:stretch;gap:8px;
+  padding:12px 10px;overflow:hidden;
+  background:var(--panel-soft);
+  background-image:var(--glass-sheen);
+  border:1px solid var(--panel-line);
+  border-radius:var(--radius);
+  box-shadow:var(--panel-shadow), var(--glass-bevel);
+  -webkit-backdrop-filter:blur(var(--blur));
+  backdrop-filter:blur(var(--blur));
+  /* 和 body 的让位共用 --rail-anim，中途不会错位 */
+  transition:width var(--rail-anim);
+}
+/* 展开态：只动这一个变量 */
+html[data-rail="open"]{ --rail:var(--rail-open) }
+
+/* 展开/收起的小方块，展开时贴右上角，折叠时居中 */
+.rail-toggle{
+  width:34px;height:34px;flex:0 0 auto;border-radius:6px;cursor:pointer;
+  align-self:flex-end;
+  display:grid;place-items:center;
+  border:1px solid var(--panel-line);background:var(--panel);color:var(--muted);
+  font-size:.9rem;line-height:1;font-family:var(--font);
+  transition:background .18s,color .18s,border-color .18s;
+}
+html:not([data-rail="open"]) .rail-toggle{align-self:center}
+.rail-toggle:hover{background:var(--panel-strong);color:var(--text);border-color:var(--panel-ring)}
+
+.rail-link{
+  height:46px;flex:0 0 auto;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  /* 折叠时 gap 和左右内边距都必须是 0：
+     gap 留着的话 justify-content:center 会把图标推偏半格；
+     内边距留着的话内容盒只剩 28px，而图标位是 1.4em(≈27px)，边上就没余量了。 */
+  gap:0;padding:0;
+  overflow:hidden;white-space:nowrap;font-size:.93rem;font-weight:600;
+  color:var(--muted);border:1px solid transparent;
+  /* gap/padding 跟着 --rail-anim 走，和栏宽同步；位移单独快一点，手感才跟手 */
+  transition:background .18s,color .18s,border-color .18s,box-shadow .18s,
+             transform .2s var(--anim),gap var(--rail-anim),padding var(--rail-anim);
+}
+/* 悬停位移照抄参考站的 -2px */
+.rail-link:hover{background:var(--panel);color:var(--text);text-decoration:none;transform:translateY(-2px)}
+/* 定宽图标位：展开后所有文字从同一条竖线开始 */
+.rail-ico{
+  font-size:1.2rem;line-height:1;flex:0 0 auto;width:1.4em;
+  display:grid;place-items:center;
+}
+/* 折叠靠 max-width + opacity 一起收。display:none 是没法过渡的 */
+.rail-txt{opacity:0;max-width:0;overflow:hidden;transition:opacity .18s,max-width var(--rail-anim)}
+html[data-rail="open"] .rail-link{justify-content:flex-start;gap:10px;padding:0 13px}
+html[data-rail="open"] .rail-txt{opacity:1;max-width:150px}
+
+/* 当前项：浅蓝实心块 + 黑图标。
+   参考站用的是「亮蓝底 + 白图标」，那样对比度不够，也不符合你说的浅蓝白黑 */
+.rail-link.on{
+  background:linear-gradient(135deg,var(--sky-200),var(--sky-300));
+  color:var(--ink);
+  border-color:rgba(143,203,241,.7);
+  box-shadow:0 6px 18px rgba(102,181,234,.35), inset 0 1px 0 rgba(255,255,255,.7);
+}
+/* 侧边栏里的按钮（主题切换）——套 .rail-link 的外观，但得先把按钮自带的底和框去掉 */
+.rail-act{width:100%;background:none;cursor:pointer;font-family:var(--font)}
+
+/* 导航区撑满侧边栏剩下的高度，图标 space-evenly 一路铺到底。
+   参考站就是这样的：图标均匀分布在整条栏里。
+   以前这里是 display:contents（图标靠 gap 挤在顶上、下面用 flex 撑杆顶开），
+   结果就是中间空出一大块白的 —— 就是用户说的「有一块是空白的」。
+   高度不够时让它自己滚（滚动条藏起来），别把图标挤变形。 */
+#nav{
+  display:flex;flex-direction:column;flex:1 1 auto;min-height:0;
+  justify-content:space-evenly;gap:4px;
+  overflow-y:auto;overflow-x:hidden;
+  scrollbar-width:none;
+}
+#nav::-webkit-scrollbar{width:0;height:0}
+
+/* 图标：统一走 mask —— 只取 SVG 的形状，颜色交给 currentColor。
+   所以亮色/暗色下图标自动跟着文字变，不用准备两套图；
+   用 <img> 是做不到的，图片里的颜色是死的。
+   --ico 由 JS 按 SITE.iconDir + 图标名 拼出来。 */
+.ico-img{
+  width:1.25em;height:1.25em;flex:0 0 auto;
+  /* inline-block，不是 block —— 图标常常和文字同一行（按钮里的「✉ 邮箱」、
+     加载失败时的占位块），block 会把后面的字挤到下一行去。
+     再往下挪一点点补基线差：方块没有文字那样的基线，不补会显得偏高。 */
+  display:inline-block;vertical-align:-.16em;
+  background-color:currentColor;
+  -webkit-mask:var(--ico) center/contain no-repeat;
+  mask:var(--ico) center/contain no-repeat;
+}
+
+/* ==========================================================================
+   顶栏
+   ========================================================================== */
+/* 顶栏和侧边栏、主面板是同一块材质：浮起的圆角玻璃，四周留缝，带阴影和斜角。
+   以前它是贴顶通栏的一条，只有下边框 —— 参考站不是那样的，那边顶栏是一块
+   独立浮着的板子，和侧边栏同款。 */
+header{
+  position:sticky;top:var(--edge);z-index:50;
+  /* 抵消 body 的左内边距（让位给侧边栏），再退回 --edge 那道缝。
+     窗口宽度 - 2*--edge 就是顶栏的宽，左右两边和侧边栏对齐。 */
+  margin-left:calc(-1 * var(--shell) + var(--edge));
+  margin-right:var(--edge);
+  background:var(--panel-soft);
+  background-image:var(--glass-sheen);
+  border:1px solid var(--panel-line);
+  border-radius:var(--radius);
+  box-shadow:var(--panel-shadow), var(--glass-bevel);
+  -webkit-backdrop-filter:blur(var(--blur));
+  backdrop-filter:blur(var(--blur));
+  /* 裁掉下面那道彩虹镀膜伸出去的部分，同时也建立层叠上下文，
+     让 z-index:-2 的彩虹沉在玻璃底和文字之间 */
+  overflow:hidden;isolation:isolate;
+  transition:margin-left var(--rail-anim);
+}
+.bar{
+  /* 品牌贴住顶栏左边缘，搜索贴住右边缘（照参考站的样子）。
+     以前这里用 max-width 卡着正文的 1080px、左内边距还额外补了一份 --shell，
+     为的是让品牌/搜索跟下面 main 的左右边缘对齐。但 --maxw 只有 1080px，
+     窗口一宽，这一条就被居中收窄，品牌被顶到离窗口左边两百多像素的地方，
+     顶栏左边空出一大片（就是看着空的原因）。现在放开宽度，整条铺满面板。
+     只动左对齐这一件事，时钟和搜索里的东西一个字没改 ——
+     时钟还是靠 margin:0 auto 在剩下的空档里居中，搜索还是 flex 尾部那一坨。 */
+  padding:20px 22px;
+  display:flex;align-items:center;gap:14px;
+}
+.brand{display:flex;align-items:center;gap:11px;flex:0 0 auto}
+.brand a{font-weight:800;font-size:1.2rem;letter-spacing:.5px;color:var(--text)}
+.brand a:hover{text-decoration:none;color:var(--link-hover)}
+.brand .mark{
+  position:relative;
+  width:42px;height:42px;border-radius:9px;flex:0 0 auto;
+  background:linear-gradient(135deg,var(--sky-200) 0%,var(--sky-400) 100%);
+  color:var(--ink);display:grid;place-items:center;font-size:.95rem;font-weight:800;
+  border:1px solid rgba(143,203,241,.6);
+  box-shadow:0 4px 14px rgba(102,181,234,.38), inset 0 1px 0 rgba(255,255,255,.7);
+  cursor:pointer;user-select:none;
+  -webkit-tap-highlight-color:transparent;
+  -webkit-touch-callout:none;   /* 手机上长按别弹「存储图片」那个菜单 */
+  touch-action:manipulation;    /* 免得双击被当成缩放，长按被当成选中 */
+  /* ⚠️ 这里**不能**再写 overflow:hidden —— 爆炸的碎片要飞出方块外面。
+     配了 SITE.markImg 时图片的圆角，改由 .mark-face 自己裁（见下）。 */
+}
+/* 和头像圈一个套路：占位字和图片同占一格，图片盖上去，挂了就露出字 */
+.brand .mark > *{grid-area:1/1}
+.mark-face{
+  width:100%;height:100%;border-radius:8px;overflow:hidden;
+  display:grid;place-items:center;
+}
+.mark-face > *{grid-area:1/1}
+.mark-face img{width:100%;height:100%;object-fit:cover;display:block}
+
+/* ---- 长按 3 秒：方块抖起来，外面套一圈进度环 ----
+   进度环就是一段 SVG 圆弧，stroke-dashoffset 从「满」走到 0 正好跑完一圈。
+   时长 3s 必须和 boot.js 里那个 setTimeout(…, 3000) 对齐，改一个记得改另一个。 */
+.mark-ring{
+  position:absolute;inset:-3px;pointer-events:none;overflow:visible;
+  transform:rotate(-90deg);      /* 让弧从 12 点方向开始长 */
+  opacity:0;transition:opacity .2s;
+}
+.mark-ring circle{
+  fill:none;stroke:var(--sky-600);stroke-width:2.5;stroke-linecap:round;
+  stroke-dasharray:125.7;        /* 2πr = 2π×20 ≈ 125.7，正好一整圈 */
+  stroke-dashoffset:125.7;       /* 满偏移 = 一点都看不见 */
+}
+.mark.is-press .mark-ring{opacity:1}
+.mark.is-press .mark-ring circle{
+  stroke-dashoffset:0;
+  transition:stroke-dashoffset 3s linear;
+}
+.mark.is-press{animation:markShake .1s linear infinite}
+@keyframes markShake{
+  0%,100%{transform:translate(0,0) rotate(0)}
+  25%{transform:translate(-1.5px,1px) rotate(-1.5deg)}
+  75%{transform:translate(1.5px,-1px) rotate(1.5deg)}
+}
+
+/* ---- 爆炸 ---- */
+/* 这层自己不占地方（0×0，钉在方块中心），碎片从中心往外飞。
+   碎片的位置/颜色由 bootSecret() 逐颗写死，CSS 只负责「怎么动」。 */
+.mark-boom{position:absolute;left:50%;top:50%;width:0;height:0;pointer-events:none}
+.mark-boom i{
+  position:absolute;left:0;top:0;width:5px;height:5px;margin:-2.5px 0 0 -2.5px;
+  border-radius:50%;background:var(--sky-500);opacity:0;
+}
+.mark-boom.go i{animation:markSpark .62s cubic-bezier(.15,.75,.35,1) forwards}
+@keyframes markSpark{
+  0%{opacity:1;transform:translate(0,0) scale(.35)}
+  65%{opacity:1}
+  100%{opacity:0;transform:translate(var(--dx,0px),var(--dy,0px)) scale(.1)}
+}
+/* 冲击波：一圈描边很快扩出去 */
+.mark-boom::after{
+  content:'';position:absolute;left:0;top:0;width:6px;height:6px;margin:-3px 0 0 -3px;
+  border-radius:50%;border:2px solid var(--sky-400);opacity:0;
+}
+.mark-boom.go::after{animation:markWave .55s ease-out forwards}
+@keyframes markWave{
+  0%{opacity:.9;transform:scale(1)}
+  100%{opacity:0;transform:scale(10)}
+}
+/* 方块自己闪一下、涨一下，然后灭掉，把位置让给按钮 */
+.mark.is-boom .mark-face{animation:markFlash .5s ease-out forwards}
+@keyframes markFlash{
+  0%{filter:brightness(2.4);transform:scale(1.18)}
+  100%{filter:none;transform:scale(1);opacity:0}
+}
+
+/* ---- 爆炸后露出来的功能按钮 ----
+   ⚠️ position/z-index 这两行不是装饰，删了按钮就会时灵时不灵：
+      它和 .mark-face 叠在同一个格子里，而 .mark-face 一戴上 opacity:0，
+      就会按「z-index:0 的定位元素」来画（见下面 .is-dev 那条），
+      反倒压到没定位的按钮头上。给个正 z-index，把这层关系钉死。 */
+.mark-dev{
+  position:relative;z-index:1;
+  width:100%;height:100%;border-radius:8px;cursor:pointer;padding:0;
+  display:grid;place-items:center;
+  border:0;font-family:var(--font);font-size:1.15rem;line-height:1;color:#fff;
+  background:linear-gradient(135deg,var(--sky-500),var(--sky-700));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.45);
+}
+.mark-dev:hover{filter:brightness(1.08)}
+.mark-dev:active{transform:scale(.94)}
+/* 只在「刚炸出来」那一下转着进来。刷新页面时已经解锁的（.is-dev 直接就是）
+   不该再演一遍，所以动画挂在 .is-boom 上，不挂在 .mark-dev 自己身上。 */
+.mark.is-boom .mark-dev{animation:markDevIn .5s cubic-bezier(.2,1.6,.45,1) both}
+@keyframes markDevIn{
+  0%{opacity:0;transform:scale(.15) rotate(-120deg)}
+  100%{opacity:1;transform:none}
+}
+/* ⚠️ pointer-events:none 和 opacity 是一套，少了它齿轮就只能点开一次：
+   opacity:0 只是「看不见」，方块脸照样盖在按钮上吃点击；
+   而且按 CSS 的规定，opacity 小于 1 又不是定位元素的东西，要**当成
+   position:static + z-index:0 的定位元素来画**，于是它排在文档顺序靠后的
+   按钮上面 —— 齿轮刚炸出来那 1.5 秒里 .mark-dev 自己也带着动画，两者同级，
+   才轮到按钮赢；等动画一撤、方块脸翻上来，点击就全被它截胡了。
+   补上 pointer-events:none，再把 .mark-dev 的 z-index 钉死，两道保险。 */
+.mark.is-dev .mark-face{opacity:0;pointer-events:none}
+.mark.is-dev .mark-ring{display:none}
+/* 右键恢复时方块脸转着回来。没有这个的话齿轮「啪」一下没了，看着像卡住了。
+   类名由 devRelock() 加上，动画跑完自己摘掉 */
+.mark.is-lock .mark-face{animation:markUnlock .45s cubic-bezier(.2,1.3,.4,1)}
+@keyframes markUnlock{
+  0%{opacity:0;transform:scale(.6) rotate(-40deg)}
+  100%{opacity:1;transform:none}
+}
+/* 系统开了「减少动态效果」：不抖不炸，环直接消失，长按满 3 秒照样解锁 */
+@media (prefers-reduced-motion:reduce){
+  .mark.is-press .mark-ring circle{transition:none;stroke-dashoffset:0}
+}
+/* 时钟：margin auto 让它在品牌和右边的搜索/状态之间居中。
+   时间字号单拎出来放大 —— 参考站那颗大时钟就是整条顶栏的视觉中心，
+   全用一个字号的话顶栏会显得空。 */
+.clock{
+  margin:0 auto;font-family:var(--mono);
+  color:var(--muted);white-space:nowrap;letter-spacing:.4px;
+  display:flex;align-items:baseline;gap:9px;
+}
+.clock .t{font-size:1.5rem;font-weight:700;color:var(--text);line-height:1;letter-spacing:.5px}
+.clock .sep{opacity:.45}
+.clock .d{font-size:.88rem}
+.search{position:relative;flex:0 0 auto}
+.search input{
+  width:196px;padding:10px 14px 10px 34px;border-radius:8px;
+  border:1px solid var(--panel-line);
+  background:var(--panel);color:var(--text);
+  font-family:var(--font);font-size:.9rem;
+  -webkit-backdrop-filter:blur(var(--blur));
+  backdrop-filter:blur(var(--blur));
+  transition:width .22s,border-color .18s,box-shadow .18s;
+}
+.search input::placeholder{color:var(--muted)}
+.search input:focus{
+  outline:none;width:226px;
+  border-color:var(--panel-ring);
+  box-shadow:var(--panel-shadow);
+}
+.search::before{
+  content:'\1F50D';position:absolute;left:11px;top:50%;transform:translateY(-50%);
+  font-size:.8rem;opacity:.55;pointer-events:none;
+}
+.status{flex:0 0 auto;color:var(--muted);font-size:.9rem;white-space:nowrap}
+.icon-btn{
+  width:42px;height:42px;border-radius:9px;
+  border:1px solid var(--panel-line);
+  background:var(--panel);
+  color:var(--text);cursor:pointer;
+  display:grid;place-items:center;font-size:1rem;
+  -webkit-backdrop-filter:blur(var(--blur));
+  backdrop-filter:blur(var(--blur));
+  transition:transform .18s,border-color .18s,box-shadow .18s;
+}
+.icon-btn:hover{transform:translateY(-1px);border-color:var(--panel-ring);box-shadow:var(--panel-shadow)}
+
+
+/* ==========================================================================
+   三栏的悬停反馈（顶栏 / 侧边栏 / 主内容栏）
+   ==========================================================================
+   这三块是页面上最大的，可它们原来一点反馈都没有：鼠标扫过去纹丝不动，
+   而它们**里面**的卡片、按钮、链接却都会轻轻抬一下。最外三层最「死」，
+   里层全是活的，手感是断的。
+
+   这里补上和 .card:hover（见 styles/layout.css）同一套：轻微上抬 + 阴影加深
+   + 边框提亮，另外加一下很轻的左右晃动（shellNudge），像被碰了一下。
+   左边那三处变量（--panel-ring / --panel-shadow-lg / --glass-bevel）和卡片
+   用的完全是同一批，所以手感和卡片是一致的。
+
+   ⚠️ 给元素加 transform 会让它成为 position:fixed 的包含块 ——
+      里面所有 fixed 元素都会被关进它的范围里定位，浮层会「困」在里面。
+      #devSheet、#devBar、#progress、#splash 这几个本来就是挂在 <body> 下的，
+      不受影响；**以后再加浮层，也请挂在 main 外面**。
+
+   ⚠️ header 和 #rail 上原本各有一条 transition（分别是 margin-left 和 width，
+      给侧边栏展开收起用的）。下面必须把它们原样带上再补新的 ——
+      transition 是整条覆盖的，漏掉哪条，那个属性就会「啪」地跳过去、没有动画。
+
+   ⚠️ 只在真有指针（鼠标）的设备上做：触屏没有 hover，有的浏览器还会「粘住」
+      不放，手指点一下整块面板就歪在那儿不动了，比没有还糟。
+   ========================================================================== */
+
+/* 晃一下，收在 -1px —— 和下面 :hover 里的静态值对齐，动画跑完不跳。
+   三帧的位移都取整（-1/-2/1/-1），非整数位移在缩放不是整倍的屏幕上会发虚。
+
+   幅度调过一轮。原来是 ±3px + ±.18°，那套是照卡片（280px 宽）配的，
+   可这三块是整屏的：1300px 宽的元素转 .18°，端点能甩出 4px，看着晃得厉害。
+   现在旋转收到 .06°、纵向 3px→2px、落点 -2px→-1px ——
+   横向仍然留 1px（全砍掉就不像「被碰了一下」了），位移也仍然全是整数。 */
+@keyframes shellNudge{
+  0%  {transform:translate(0,0) rotate(0)}
+  30% {transform:translate(-1px,-2px) rotate(-.06deg)}
+  60% {transform:translate(1px,-1px) rotate(.06deg)}
+  100%{transform:translateY(-1px)}
+}
+/* 主内容栏用这条：晃完**归位**。
+   整页正文（几万个字）要是长期挂在 -1px 的合成层上，在非整数缩放的屏幕上
+   文字会发虚；header / #rail 里没几个字、本来就带 backdrop-filter 是合成层，
+   就无所谓。所以 main 只在晃的那 .45s 里位移，之后回到原地。 */
+@keyframes shellNudgeBack{
+  0%  {transform:translate(0,0) rotate(0)}
+  30% {transform:translate(-1px,-2px) rotate(-.06deg)}
+  60% {transform:translate(1px,-1px) rotate(.06deg)}
+  100%{transform:none}
+}
+
+@media (hover:hover) and (pointer:fine){
+  header,
+  #rail{
+    transition:margin-left var(--rail-anim), width var(--rail-anim),
+               transform .3s var(--anim), box-shadow .3s var(--anim),
+               border-color .3s var(--anim);
+  }
+  main{transition:transform .45s var(--anim), box-shadow .3s var(--anim)}
+
+  header:hover,
+  #rail:hover{
+    animation:shellNudge .45s var(--anim);
+    transform:translateY(-1px);
+    border-color:var(--panel-ring);
+    box-shadow:var(--panel-shadow-lg), var(--glass-bevel);
+  }
+
+  main:hover{
+    animation:shellNudgeBack .45s var(--anim);
+    /* main 没有玻璃面板那层底和边框，硬加一个边框会凭空多出一个大方框，
+       所以这里只给一层很淡的光晕。圆角不是为了显示，是让阴影的四个角
+       别是方的 —— main 自己没有可见背景。 */
+    border-radius:var(--radius);
+    box-shadow:0 12px 34px -24px rgba(52,116,180,.4);
+  }
+}
