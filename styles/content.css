@@ -599,3 +599,14 @@ button.ps-btn i{font-style:normal;font-size:.82em;opacity:.72;margin-left:5px}
   .site-links{grid-template-columns:1fr}
   .site-link .dev-row-act{width:100%;justify-content:flex-start}
 }
+
+/* 只在开发者模式开着的时候，让封面能单独点 —— 普通访客点封面还是进文章 */
+html.dev-on .card .cover{
+  position:relative;
+  z-index:2;
+  cursor:pointer;
+}
+html.dev-on .card .cover:hover{
+  outline:2px solid var(--sky-400);
+  outline-offset:-2px;
+}
