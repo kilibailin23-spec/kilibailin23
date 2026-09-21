@@ -590,3 +590,62 @@ html.dev-on .card .cover:hover{
   outline:2px solid var(--sky-400);
   outline-offset:-2px;
 }
+
+/* ==========================================================================
+   手机上不保留任何毛玻璃
+   ==========================================================================
+   backdrop-filter 的代价是「每个元素各自把底下的像素抓过来模糊一次」，跟元素
+   数量成正比；移动 GPU 又弱得多。上面特意留下的那几个虽然每屏只有一两个，
+   手机上仍然值不回票价 —— 尤其滚动时它们底下的内容一直在变，每帧都得重算。
+
+   ⚠️ 这段必须待在所有样式表的**最后**（content.css 是最后引用的那个，
+   rainbow.css 里没有毛玻璃）。媒体查询本身**不增加特异性**，写 `.card{...}`
+   是压不住前面同名规则的 —— 能生效全靠源码顺序，别把它挪前面去。
+   想调回来的话，把这整段删掉即可，桌面端不受影响。 */
+@media (max-width: 768px){
+  /* 模糊一关，底下的背景图和飘着的粒子就清清楚楚透上来了，卡片上的字会糊 ——
+     底色得跟着调实。数值抄的是 base.css 里「浏览器压根不支持 backdrop-filter」
+     那个兜底分支，是项目已有的做法。
+     ⚠️ 深色那条写成 :root:not([data-theme="light"]) 而不是 html[data-theme="dark"]，
+     是为了压住 variables.css 里 @media(prefers-color-scheme:dark) 那条 ——
+     后者特异性 (0,2,0)，只有同级的写法才比得过，平级下靠 content.css 排在后面赢。 */
+  :root{ --panel:rgba(255,255,255,.93); --panel-soft:rgba(255,255,255,.88) }
+  :root:not([data-theme="light"]){ --panel:rgba(12,30,48,.92); --panel-soft:rgba(12,30,48,.86) }
+
+  #rail, .search input, .icon-btn,
+  .home-panel, .home-contact, .empty,
+  .article .body, .article .body blockquote, .article .body pre,
+  footer, .tl-head, .modal-box, .modal-veil, .dev-bar-float{
+    -webkit-backdrop-filter:none;
+    backdrop-filter:none;
+  }
+}
+
+/* ==========================================================================
+   手机上关掉那些「一直转个没完」的动效
+   ==========================================================================
+   跟上面那条毛玻璃一个出发点：手机的电和 GPU 都得省着用。这里挑的全是
+   **无限循环**的 —— 页面开着就一直烧，跟用户有没有在操作无关。
+
+   ⚠️ 四行彼此独立，想留下哪个就删哪行：
+     .mark.is-press  长按顶栏方块时那个抖动（就是「震动」那条）
+     .blob           开场那三团缓慢变形的光斑
+     .plane-wrap     开场的小飞机上下飘
+     .dbf-dot        开发者模式浮动栏上那颗呼吸的圆点
+   最费的是前两条：它们身上都挂着 filter（blur / drop-shadow），每帧都得跟着
+   重算 —— 光看动画本身很便宜，跟 filter 凑一块才贵。
+
+   ⚠️ 长按的反馈不会丢：进度环那一圈照转，它走的是 stroke-dashoffset 的
+   transition，跟这里的 animation 没关系（见 styles/aero.css 的 .mark.is-press）。
+
+   ⚠️ 没动那些「播一次就停」的：进场淡入（rise）、解锁那套爆炸（markSpark /
+   markWave / markFlash / markUnlock）、小窗口淡入（devFade / devIn / devBarIn）。
+   它们只在有事发生时跑一下，代价可以忽略，去掉反而显得页面是死的。
+
+   桌面端一个字不改 —— 整段裹在媒体查询里，删掉即可恢复。 */
+@media (max-width: 768px){
+  .mark.is-press,
+  .blob,
+  .plane-wrap,
+  .dbf-dot{animation:none}
+}

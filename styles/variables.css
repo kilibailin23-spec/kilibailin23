@@ -60,6 +60,13 @@
   --glass-sheen:
     linear-gradient(to bottom,rgba(255,255,255,.02) 70%,rgba(255,255,255,.10)),
     linear-gradient(to bottom,rgba(255,255,255,.05),rgba(255,255,255,.025) 50%,rgba(255,255,255,.015));
+  /* 毛玻璃的模糊半径。
+     ⚠️ 只有「每屏只出现一两个」的元素才配用 backdrop-filter（顶栏、侧边栏、
+     hero 面板、小窗口）。它的代价是**每个元素各自把底下的像素抓过来模糊一次**，
+     跟元素数量成正比 —— 卡片、标签、下载条目这种成堆出现的，一屏就是几十次
+     全屏模糊，手机上直接掉帧。所以 .card / .chip / .dl / .dl-card / .ico-img
+     那几个的 backdrop-filter 是**故意删掉**的，不是漏写；想知道完整的取舍，
+     搜 styles/content.css 末尾那段「手机上关掉所有毛玻璃」。 */
   --blur:12px;
   --anim:cubic-bezier(.25,.46,.45,.94);
 

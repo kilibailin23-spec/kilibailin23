@@ -44,7 +44,13 @@ html[data-theme="dark"] .bg-night{opacity:1}
   background:rgba(var(--veil-rgb), var(--bg-veil));
   transition:background .35s;
 }
-.particle-layer{z-index:-1;overflow:hidden}
+/* ⚠️ 粒子层只铺页面**顶部四分之一**，别把 inset 改回 0。
+   缩成一条有两个好处：要画的面积小了一大截；更要紧的是下面四分之三的卡片
+   底下不再有「一直在动」的像素，backdrop-filter 的模糊结果就能被浏览器缓存
+   住、不用每帧重算 —— 这才是手机上卡的主因。
+   height 想调就直接改，app/effects.js 不用跟着动：那边是拿 canvas 的
+   getBoundingClientRect() 量尺寸的，CSS 写多大它就画多大。 */
+.particle-layer{z-index:-1;overflow:hidden;inset:0 0 auto 0;height:25vh}
 .particle-layer canvas{display:block;width:100%;height:100%}
 
 /* 不支持 backdrop-filter 的浏览器：把面板调实，保证能看清 */

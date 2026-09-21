@@ -127,8 +127,6 @@ header{
   border:1px solid var(--panel-line);
   border-radius:var(--radius);
   box-shadow:var(--panel-shadow), var(--glass-bevel);
-  -webkit-backdrop-filter:blur(var(--blur));
-  backdrop-filter:blur(var(--blur));
   overflow:hidden;isolation:isolate;
   transition:margin-left var(--rail-anim);
 }

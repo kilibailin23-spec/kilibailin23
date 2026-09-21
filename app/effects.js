@@ -28,6 +28,14 @@ function bootParticles(){
   const rm = window.matchMedia && window.matchMedia('(prefers-reduced-motion:reduce)')
   if(rm && rm.matches) return
 
+  /* ⚠️ 手机上一律不画。屏幕小，粒子本来就糊成一团看不清，GPU 又是最弱的一档，
+     这块开销纯亏。断点跟 styles/content.css 末尾那两段 @media(max-width:768px)
+     对齐 —— 那两段已经关掉毛玻璃和几个无限循环的动效，这里再把粒子也关掉，
+     手机上剩下的就全是静态 CSS 了。
+     只在启动时量这一次：中途把窗口拖过断点的只有桌面浏览器，
+     不值得为它常驻一个 resize 监听。 */
+  if(window.innerWidth <= 768) return
+
   const COUNT  = Math.max(0, cfg.count == null ? 80 : cfg.count)
   const SPEED  = cfg.speed == null ? 0.5 : cfg.speed
   const MARGIN = 50
@@ -139,11 +147,16 @@ function bootParticles(){
     for(let i = 0; i < COUNT; i++) parts.push(new Particle(dark, cols))
   }
 
+  /* ⚠️ 尺寸一律从 canvas 自己的 CSS 盒子上量，别用 window.innerWidth/innerHeight。
+     粒子层现在只占顶部一条（见 styles/base.css 的 .particle-layer），而 25vh 和
+     window.innerHeight * .25 在手机上能差出一个地址栏的高度 —— 对不上就会把画布
+     拉变形，粒子全变成椭圆。量盒子则永远跟 CSS 一致。 */
   function resize(){
     const dpr = Math.min(window.devicePixelRatio || 1, 2)
-    W = window.innerWidth
-    H = window.innerHeight
-    cv.width = Math.round(W * dpr)
+    const r = cv.getBoundingClientRect()
+    W = Math.round(r.width)
+    H = Math.round(r.height)
+    cv.width  = Math.round(W * dpr)
     cv.height = Math.round(H * dpr)
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
     make()

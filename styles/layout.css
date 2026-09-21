@@ -51,8 +51,6 @@ html[data-theme="dark"] .hero h1 .grad{
   border-color:var(--panel-line);
   color:var(--text);
   box-shadow:var(--panel-shadow);
-  -webkit-backdrop-filter:blur(var(--blur));
-  backdrop-filter:blur(var(--blur));
 }
 .btn.ghost:hover{border-color:var(--panel-ring);box-shadow:var(--panel-shadow-lg)}
 
@@ -211,8 +209,6 @@ section{margin-bottom:60px}
   border-radius:var(--radius);
   padding:22px;
   box-shadow:var(--panel-shadow), var(--glass-bevel);
-  -webkit-backdrop-filter:blur(var(--blur));
-  backdrop-filter:blur(var(--blur));
   transition:transform .3s var(--anim), box-shadow .3s var(--anim), border-color .3s var(--anim), background-color .3s var(--anim);
   display:flex;flex-direction:column;
   position:relative;
@@ -260,8 +256,6 @@ html[data-theme="dark"] .card::before{background:linear-gradient(90deg,transpare
   /* ⚠️ 字色用 --text 不用 --ink：--ink 在暗色下不翻白，标签会变成黑底黑字整个看不见 */
   color:var(--text);
   white-space:nowrap;
-  -webkit-backdrop-filter:blur(var(--blur));
-  backdrop-filter:blur(var(--blur));
 }
 .chips{display:flex;gap:7px;flex-wrap:wrap;margin-top:14px}
 
@@ -280,8 +274,6 @@ html[data-theme="dark"] .card::before{background:linear-gradient(90deg,transpare
   padding-left:24px;
   text-decoration:none;
   box-shadow:var(--panel-shadow), var(--glass-bevel);
-  -webkit-backdrop-filter:blur(var(--blur));
-  backdrop-filter:blur(var(--blur));
 }
 .post-row .t{font-weight:670;color:var(--text);font-size:1.02rem}
 .post-row .d{margin-left:auto;color:var(--muted);font-size:.85rem;white-space:nowrap;font-family:var(--mono)}
@@ -351,8 +343,6 @@ html[data-theme="dark"] .card::before{background:linear-gradient(90deg,transpare
   border-radius:var(--radius);
   padding:18px 20px;
   box-shadow:var(--panel-shadow), var(--glass-bevel);
-  -webkit-backdrop-filter:blur(var(--blur));
-  backdrop-filter:blur(var(--blur));
   transition:transform .22s,box-shadow .22s,border-color .22s,background .22s;
 }
 .dl:hover, .dl-folder:hover{
@@ -403,8 +393,6 @@ html[data-theme="dark"] .card::before{background:linear-gradient(90deg,transpare
   border-radius:var(--radius);
   padding:18px;
   box-shadow:var(--panel-shadow), var(--glass-bevel);
-  -webkit-backdrop-filter:blur(var(--blur));
-  backdrop-filter:blur(var(--blur));
   transition:transform .22s,box-shadow .22s,border-color .22s,background .22s;
 }
 .dl-card:hover{
