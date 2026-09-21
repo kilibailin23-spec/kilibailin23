@@ -1,10 +1,4 @@
-/* ==========================================================================
-   内容组件
-
-   快捷导航大图标卡、文章目录、代码块与复制按钮、搜索高亮/标签/归档时间线、阅读进度条、减少动效兜底。
-
-   这个文件是从原来的单文件 index.html 里拆出来的，内容没动过。
-   ========================================================================== */
+/* 内容组件：快捷导航卡、文章目录、代码块与复制按钮、搜索高亮/标签/归档、阅读进度条、开发者模式控件、拉伸链接、编辑页 */
 
 /* ==========================================================================
    快捷导航（首页的分类大图标卡）
@@ -20,7 +14,7 @@
   border:1px solid var(--panel-line);
   border-radius:var(--radius);
   box-shadow:var(--panel-shadow), var(--glass-bevel);
-  transition:all .3s var(--anim);
+  transition:transform .3s var(--anim), box-shadow .3s var(--anim), border-color .3s var(--anim), background-color .3s var(--anim);
 }
 .cat-card:hover{
   transform:translateY(-2px);text-decoration:none;
@@ -29,9 +23,6 @@
   background-color:var(--panel-strong);
 }
 .cat-card:active{transform:scale(.995);opacity:.9}
-/* 分类卡顶上那个图标。以前是表情符号，现在换成 icons/ 里的 SVG ——
-   尺寸得用 font-size 喂给 .ico-img 的 em 宽度，比写死 px 更好跟字号联动。
-   颜色单给一份强调色，不然会跟着正文的黑走，四个卡片都一样没区分。 */
 .cat-card .ico{font-size:1.7rem;line-height:1;color:var(--accent);display:grid;place-items:center}
 .cat-card .ico:empty{display:none}
 .cat-card b{font-weight:760;font-size:1rem;color:var(--text);margin-top:9px}
@@ -120,12 +111,9 @@ footer .links{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin
 }
 
 /* ==========================================================================
-   开发者模式的小窗口
-   （那是什么、能干什么、为什么它不再是登录框、为什么它不是安全机制，
-   见 index.html 里 #devSheet 上面那段注释和 README 的「开发者模式」一节）
+   开发者模式的小窗口（用途与取舍见 README「开发者模式」一节）
    ========================================================================== */
 .modal{position:fixed;inset:0;z-index:90;display:grid;place-items:center;padding:20px}
-/* 弹窗开着的时候别让底下的页面跟着滚 */
 .modal-open,.modal-open body{overflow:hidden}
 .modal-veil{
   position:absolute;inset:0;background:rgba(6,18,30,.5);
@@ -156,9 +144,6 @@ footer .links{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin
 .modal-sub b{color:var(--text)}
 .modal-sub code{font-family:var(--mono);font-size:.94em;color:var(--text)}
 
-/* 字段行的完整定义在下面「开发者模式：表单」那一节（.dev-field / .dev-field > span）。
-   这里原来还有一份 40px 标签宽的旧定义，和下面同优先级、被下面盖掉，
-   从来没生效过 —— 删了，免得以后改标签宽度改错地方。 */
 .dev-field input{
   flex:1 1 auto;min-width:0;padding:10px 12px;border-radius:8px;
   font-family:var(--font);font-size:.94rem;color:var(--text);
@@ -179,7 +164,6 @@ footer .links{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin
 .dev-btn.ghost:hover{background:var(--panel-strong);border-color:var(--panel-ring)}
 .dev-btn[disabled]{opacity:.4;cursor:default;filter:none}
 
-/* 一行 = 一张图：缩略图 + 名字 + 现在用的什么 + 两个按钮 */
 .dev-list{display:grid;gap:10px}
 .dev-row{
   display:flex;align-items:center;gap:12px;
@@ -202,19 +186,15 @@ footer .links{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
 }
 .dev-row .dev-btn{padding:7px 13px;font-size:.82rem;flex:0 0 auto}
-/* 上传按钮其实是个套了外壳的 <input type="file">：
-   input 自己没法改样式，藏起来，点 label 等于点它。 */
+/* 上传按钮是个套了外壳的 <input type="file">：input 没法改样式，藏起来，点 label 等于点它 */
 .dev-up{position:relative;overflow:hidden}
 .dev-up input{position:absolute;inset:0;opacity:0;cursor:pointer}
 
-
-/* 行里那组按钮。.dev-row 是 flex，这层负责别被 .dev-info 挤扁 */
 .dev-row-act{display:flex;gap:6px;flex:0 0 auto;flex-wrap:wrap;justify-content:flex-end}
 .dev-row .dev-btn{padding:7px 13px;font-size:.82rem;flex:0 0 auto}
 .dev-btn.danger{color:#c0392b;border-color:rgba(192,57,43,.35)}
 .dev-btn.danger:hover{background:rgba(192,57,43,.1);border-color:rgba(192,57,43,.55)}
 
-/* 「来自 data/」还是「自己加的」—— 决定这条能不能真删掉 */
 .dev-badge{
   display:inline-block;padding:1px 7px;border-radius:20px;margin-left:2px;
   font-size:.7rem;font-weight:650;vertical-align:1px;
@@ -234,18 +214,13 @@ footer .links{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin
 }
 .dev-editor h3{margin:0 0 14px;font-size:.98rem;letter-spacing:.3px}
 
-/* 两列并排。窄屏在文件末尾那个媒体查询里会摊成一列 */
-/* 两列并排的字段行。
-   ⚠️ 列宽必须写成 minmax(0,1fr)，不能光写 1fr ——
-      1fr 的下限是 `auto`，也就是「内容的最小宽度」；而 .dev-field 的最小宽度
-      是「标签 68px + 间距 10px + 输入框固有宽度(约 200px)」≈ 277px。
-      容器一窄（比如 430px 的弹窗），两列就会被撑到 568px、顶破容器右边，
-      底下冒出一条横向滚动条。minmax(0,1fr) 把下限压到 0，列才能老实收缩。
-      宽容器里 1fr 怎么分还是怎么分，不受影响。 */
+/* 两列并排的字段行。窄屏在文件末尾那个媒体查询里会摊成一列。
+   ⚠️ 列宽必须写成 minmax(0,1fr)，不能光写 1fr —— 1fr 的下限是 auto（内容最小宽度），
+   而 .dev-field 的最小宽度是「标签 68px + 间距 10px + 输入框固有宽度 ≈ 277px」，
+   容器一窄（比如 430px 的弹窗）两列就会被撑到 568px、顶破容器右边冒出横向滚动条。
+   minmax(0,1fr) 把下限压到 0，列才能老实收缩；宽容器里怎么分还是怎么分。 */
 .dev-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:0 14px}
 
-/* 字段行：标签在左、控件在右的一行式。
-   .col 是给长字段用的：标签在上面、控件占满一行。 */
 .dev-field{display:flex;align-items:center;gap:10px;margin-bottom:12px}
 .dev-field > span{flex:0 0 68px;font-size:.85rem;font-weight:600;color:var(--muted)}
 .dev-field.col{flex-direction:column;align-items:stretch;gap:6px}
@@ -257,29 +232,25 @@ footer .links{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin
   background:var(--panel-strong);border:1px solid var(--panel-line);
   resize:vertical;
 }
-/* 正文是 Markdown 源码，等宽字体写起来对齐得好看 */
 #devPostBody{font-family:var(--mono);font-size:.86rem;line-height:1.65}
 .dev-field select:focus,
 .dev-field textarea:focus{outline:none;border-color:var(--sky-400);box-shadow:0 0 0 3px rgba(102,181,234,.22)}
 
-/* 文件编辑器里的上传区 */
 .dev-upload{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
 .dev-hint{color:var(--muted);font-size:.78rem;line-height:1.6;flex:1 1 200px}
 .dev-hint b{color:var(--text)}
 .dev-hint code{font-family:var(--mono);font-size:.94em;color:var(--text)}
 
-/* 退出按钮单独一行压在最后，和上面的表单隔开 */
 .dev-foot{margin-top:20px;padding-top:16px;border-top:1px solid var(--panel-line)}
 
 /* 窄屏：左侧图标栏转成底部横条，主内容不再让位 */
 @media (max-width:760px){
   /* 归零后 --shell 自然是 0，body 的 padding 和 header 的负 margin 都不用单独处理。
-     ⚠️ 选择器必须写 :root，不能写 html —— 这三个变量是在 variables.css 的
-     :root 里声明的，:root 是伪类、优先级 (0,1,0)，而 html 只是类型选择器 (0,0,1)，
-     光写 html 根本盖不住，手机上会继续用桌面那份 72px 的栏宽和 92px 的让位。
-     （之前就是这么写的，窄屏一直没生效，页面上能看见左边空出一大条。）
-     :root[data-rail="open"] 是给展开态兜底的，优先级 (0,2,0) 更高，两个都得写。
-     --edge 得单独写一份：--rail-gap 归零是因为侧边栏在手机上要变成贴边的底部横条，
+     ⚠️ 选择器必须写 :root，不能写 html —— 这三个变量在 variables.css 的 :root 里声明，
+     :root 是伪类、优先级 (0,1,0)，而 html 只是类型选择器 (0,0,1)，光写 html 根本盖不住，
+     手机上会继续用桌面那份 72px 栏宽和 92px 让位。
+     :root[data-rail="open"] 是给展开态兜底的，优先级更高，两个都得写。
+     --edge 得单独写一份：--rail-gap 归零是因为侧边栏要变成贴边的底部横条，
      但顶栏该留的那道缝还得留着，只是窄一点。 */
   :root,:root[data-rail="open"]{ --rail:0px; --rail-gap:0px; --edge:8px }
   body{padding-bottom:64px}
@@ -291,13 +262,10 @@ footer .links{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin
     box-shadow:none;
   }
   .rail-toggle{display:none}
-  /* 竖栏变横条：#nav 那套「撑满 + 均匀分布」是为竖排写的，
-     这里退回 display:contents，让链接直接排进 #rail 的横向 flex 流。 */
+  /* 竖栏变横条：#nav 那套「撑满 + 均匀分布」是为竖排写的，这里退回 display:contents */
   #nav{display:contents}
-  /* 底部横条塞不下文字，展开态也得把标签收掉 */
   html[data-rail="open"] .rail-txt{opacity:0;max-width:0}
   html[data-rail="open"] .rail-link{justify-content:center;gap:0;padding:0 10px}
-  /* 导航 6 项 + 主题按钮 = 7 项，横排要收紧点 */
   .rail-link{width:auto;height:48px;padding:0 10px;border-radius:8px}
   .clock,.status{display:none}
   .search{flex:1 1 auto;min-width:0}
@@ -319,7 +287,6 @@ footer .links{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin
   .modal{padding:12px}
   .modal-box{padding:22px 18px 16px}
   .dev-row{flex-wrap:wrap}
-  /* 编辑器那两列并排在手机上挤成一团，摊成单列 */
   .dev-grid{grid-template-columns:1fr}
   .dev-field > span{flex:0 0 58px;font-size:.82rem}
   .dev-row-act{width:100%;justify-content:flex-start}
@@ -332,21 +299,16 @@ footer .links{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin
 /* ==========================================================================
    开发者模式：控件显隐
    ==========================================================================
-   页面上所有编辑控件都是**照常渲染出来、带 .dev-only** 的，靠这一条决定露不露脸。
-   好处是开关开发者模式只翻 <html> 上一个类名，不用重画页面 ——
-   滚动位置、正打到一半的输入框、展开着的详情都不会因为开关一下被重置。
-
-   写法是「只在**没开**的时候藏」，而不是「开的时候显示」——
-   因为同一批元素上还挂着 .dev-btn（inline-flex）/ .dev-row-act（flex）/
-   .dev-card-act（flex）各自的 display，用一条规则去「显示」它们，
-   要么写死 display:block 把它们压扁，要么用 display:revert ——
-   而 revert 会退到**浏览器默认样式**、把同一条规则里那些作者样式也一起丢掉
-   （.dev-row-act 会从 flex 变成 block，横排的按钮就竖起来了）。
-   干脆不写显示规则，元素自然回到各自类名定义的样子。 */
+   页面上所有编辑控件都照常渲染、带 .dev-only，靠这一条决定露不露脸。
+   ⚠️ 写法是「只在**没开**的时候藏」，不是「开的时候显示」—— 同一批元素上还挂着
+   .dev-btn（inline-flex）/ .dev-row-act（flex）各自的 display，用一条规则去「显示」
+   它们，要么写死 display:block 把它们压扁，要么用 display:revert，而 revert 会退到
+   **浏览器默认样式**、把同一条规则里那些作者样式一起丢掉（.dev-row-act 会从 flex
+   变成 block，横排的按钮就竖起来了）。干脆不写显示规则，元素自然回到各自类名的样子。
+   好处：开关开发者模式只翻 <html> 上一个类名，不用重画页面 —— 滚动位置、正打到
+   一半的输入框、展开着的详情都不会被重置。 */
 html:not(.dev-on) .dev-only{display:none !important}
 
-/* 开发者模式开着时，页面上能点开换掉的图片给个提示 ——
-   不然「图片可以点」这件事完全没有线索。 */
 html.dev-on main img,
 html.dev-on #markFace img{cursor:pointer}
 html.dev-on main img:hover{
@@ -358,37 +320,28 @@ html.dev-on main img:hover{
    开发者模式：就地长出来的那些控件
    ========================================================================== */
 
-/* 小号按钮。卡片角上、列表行里那些地方用大按钮太占地方 */
 .dev-btn.sm{padding:5px 11px;font-size:.78rem;border-radius:7px}
 /* .dev-btn 也当链接用（「取消」是个 <a>，「编辑」在文章页也是 <a>）：
    <a> 默认带下划线、且不是 flex，跟按钮长得不一样，这里对齐过来 */
 a.dev-btn{display:inline-flex;align-items:center;justify-content:center;text-decoration:none}
 a.dev-btn:hover{text-decoration:none}
 
-/* 页面顶部那排「+ 写新文章 / + 添加作品」 */
 .dev-bar{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 18px}
 
 /* 卡片右上角浮出来的「编辑 / 删除」。
-   ⚠️ z-index 必须压过拉伸链接那层 ::after，否则整张卡片都被它盖住、点不到 ——
-      卡片整框可点靠的是 .stretch::after 铺满卡片（见下面「拉伸链接」一节），
-      而 .dev-card-act 在 DOM 里排在 <h3> 前面，不抬起来就被盖。
-      标签 .chip 抬到 2，这里 3，以后再加可点的东西往上加。 */
+   ⚠️ z-index 必须压过拉伸链接那层 ::after（见下面「拉伸链接」一节），否则整张卡片
+   都被它盖住、点不到 —— .dev-card-act 在 DOM 里排在 <h3> 前面，不抬起来就被盖。
+   标签 .chip 抬到 2，这里 3，以后再加可点的东西往上加。 */
 .dev-card-act{position:absolute;top:12px;right:12px;z-index:3;display:flex;gap:6px}
 
-/* 文章页面末端的「删除这篇文章」 */
 .dev-page-act{margin-top:44px;padding-top:20px;border-top:1px solid var(--panel-line)}
 
-/* 就地展开的编辑器（作品卡片下面、网站分类下面）要跟上下文拉开 */
 .dev-editor{margin:14px 0}
-/* 作品页那个是塞进 .grid 里的，得占满整行，不然会挤在某一格里 */
 .grid > .dev-editor{grid-column:1/-1}
-/* 小窗口没有按钮时（比如「站点图片」那个只有列表），.dev-actions 别留一截空白 */
 .dev-actions:empty{display:none}
 
-/* 小窗口的窄版。默认 .modal-box 是 520px，对「换张图」这种事太宽了 */
 .modal-box.small{width:min(430px,100%)}
 
-/* 小窗口里的图片预览 */
 .dev-preview{
   display:grid;place-items:center;
   min-height:130px;max-height:250px;margin:0 0 14px;padding:8px;
@@ -401,14 +354,51 @@ a.dev-btn:hover{text-decoration:none}
 }
 .dev-preview img{max-width:100%;max-height:232px;border-radius:6px;display:block}
 
+/* ---- 换图时的裁剪框：框里看到的 = 页面上最终显示的 ----
+   框的宽高由 JS 按「被点那块的显示比例」算好再设进来（见 app/dev.js 的
+   openCropSheet），所以这里只管长相，不写死尺寸。 */
+.dev-crop{
+  position:relative;width:100%;margin:0 auto 10px;overflow:hidden;
+  border-radius:var(--radius-sm);border:1px solid var(--panel-line);
+  /* ⚠️ content-box 不能省：JS 是按 clientWidth（不含边框）算的图宽图高，
+     换成 border-box 的话每边会差 1px，图和框就对不齐了 */
+  box-sizing:content-box;
+  background-color:var(--panel);
+  background-image:
+    repeating-linear-gradient(45deg, var(--grid-line) 0 6px, transparent 6px 12px),
+    repeating-linear-gradient(-45deg, var(--grid-line) 0 6px, transparent 6px 12px);
+  cursor:grab;touch-action:none;
+  user-select:none;-webkit-user-select:none;
+}
+.dev-crop.dragging{cursor:grabbing}
+/* ⚠️ max-width:none 不能省：base.css 里那条 img{max-width:100%} 会把图卡在框的宽度上，
+   放大之后图根本铺不满框，拖动也就没意义了 */
+.dev-crop img{
+  position:absolute;top:0;left:0;max-width:none;
+  transform-origin:0 0;pointer-events:none;-webkit-user-drag:none;
+}
+/* 头像 / 方块在页面上是被裁成圆的、圆角的 —— 框里先把这一刀画出来：
+   这块遮罩铺满框，靠一圈巨大的外阴影把「圆角以外」压暗，父级的 overflow:hidden
+   会把阴影多出来的部分裁掉，于是框内只剩圆角外那一圈是暗的。 */
+.dev-crop-mask{
+  position:absolute;inset:0;pointer-events:none;
+  box-shadow:0 0 0 999px rgba(8,20,32,.5);
+}
+.dev-crop-mask.round{border-radius:50%}
+/* 19% ≈ 顶栏方块自己的 8px/42px 圆角，放大到框里也得是这个观感 */
+.dev-crop-mask.squircle{border-radius:19%}
+.dev-crop-bar{display:flex;align-items:center;gap:10px;margin:0 0 12px}
+.dev-crop-lab{flex:0 0 auto;font-size:.82rem;font-weight:600;color:var(--muted)}
+.dev-crop-bar input[type="range"]{flex:1 1 auto;min-width:0;cursor:pointer;accent-color:var(--sky-500)}
+.dev-crop-size{flex:0 0 auto;font-family:var(--mono);font-size:.76rem;color:var(--muted)}
+
 /* ==========================================================================
    开发者模式：浮动工具条（右下角）
    ==========================================================================
-   只有开发者模式开着时才显示（靠上面 .dev-only 那条规则）。
-   为什么需要它：换图那一摊里**背景图不是 <img>**（是 CSS 变量画的），
-   点不到，只能从这儿进去换；另外「我到底在不在开发者模式里」也得有个指示，
-   不然页面上光多了一堆按钮，人会犯嘀咕。
-   ⚠️ 挂在 <body> 下，不能放进 main（transform 会困住 fixed，见 app/boot.js） */
+   只有开发者模式开着时才显示（靠上面 .dev-only 那条规则）。换图那一摊里背景图
+   不是 <img>（是 CSS 变量画的），点不到，只能从这儿进去换；另外「我到底在不在
+   开发者模式里」也得有个指示。
+   ⚠️ 挂在 <body> 下，不能放进 main（transform 会困住 fixed） */
 .dev-bar-float{
   position:fixed;right:16px;bottom:16px;z-index:80;
   display:flex;align-items:center;gap:10px;
@@ -421,7 +411,6 @@ a.dev-btn:hover{text-decoration:none}
 }
 @keyframes devBarIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
 .dev-bar-float b{font-size:.83rem;font-weight:700;letter-spacing:.2px}
-/* 那颗呼吸的小圆点：提醒人「现在的显示效果只存在这台电脑上」 */
 .dbf-dot{
   width:8px;height:8px;border-radius:50%;flex:0 0 auto;
   background:var(--sky-400);box-shadow:0 0 0 0 rgba(102,181,234,.6);
@@ -432,7 +421,6 @@ a.dev-btn:hover{text-decoration:none}
   70% {box-shadow:0 0 0 9px rgba(102,181,234,0)}
   100%{box-shadow:0 0 0 0 rgba(102,181,234,0)}
 }
-/* 手机上工具条会盖住内容，收到最小：只留圆点和「退出」 */
 @media (max-width:640px){
   .dev-bar-float{right:10px;bottom:10px;padding:7px 10px;gap:8px}
   .dev-bar-float b{display:none}
@@ -441,17 +429,12 @@ a.dev-btn:hover{text-decoration:none}
 /* ==========================================================================
    拉伸链接（整框可点）
    ==========================================================================
-   卡片里有标签链接，所以**不能**给整张卡片套一个 <a>（<a> 套 <a> 是非法
-   HTML，浏览器会把它们拆开，点哪儿都可能跳错）。
-
-   改用拉伸链接：标题那个 <a> 挂 .stretch，它的 ::after 铺满整张卡片
-   （.card 本来就是 position:relative）。于是卡片空白处、封面、摘要点到，
-   冒泡上去都是这个 <a> —— 等于整框可点。
-
-   ⚠️ 这层 ::after 盖在所有东西上面，所以卡片里任何**要单独点得到**的东西
-      都得抬 z-index：标签 .chip 是 2，开发者模式那两个按钮是 3（见上）。
-   ⚠️ 它的包含块是最近的**定位**祖先。卡片是 position:relative，
-      所以铺满的是整张卡片；网站导航那一行 .site-link 同理。 */
+   卡片里有标签链接，所以**不能**给整张卡片套一个 <a>（<a> 套 <a> 是非法 HTML，
+   浏览器会把它们拆开，点哪儿都可能跳错）。改用拉伸链接：标题那个 <a> 挂 .stretch，
+   它的 ::after 铺满整张卡片。于是卡片空白处、封面、摘要点到，冒泡上去都是这个 <a>。
+   ⚠️ 这层 ::after 盖在所有东西上面，所以卡片里任何**要单独点得到**的东西都得抬
+   z-index：标签 .chip 是 2，开发者模式那两个按钮是 3。
+   ⚠️ 它的包含块是最近的**定位**祖先；.card 本来就是 position:relative。 */
 .stretch::after{content:'';position:absolute;inset:0;z-index:1}
 /* 标签得能单独点（跳到标签页），抬到拉伸层上面 */
 .card .chip{position:relative;z-index:2}
@@ -459,9 +442,8 @@ a.dev-btn:hover{text-decoration:none}
 /* ==========================================================================
    文章页：列表 / 归档 切换
    ==========================================================================
-   归档原来单独占一个导航项，可它和文章列表看的是同一批数据、两个入口
-   点进去内容差不多 —— 现在归档收进文章模块，由这排按钮切。
-   空出来的导航位给了「网站导航」。 */
+   归档原来单独占一个导航项，可它和文章列表看的是同一批数据，现在收进文章模块
+   由这排按钮切，空出来的导航位给了「网站导航」。 */
 .posts-bar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 20px}
 .posts-switch{
   display:inline-flex;gap:4px;padding:4px;
@@ -477,39 +459,32 @@ a.dev-btn:hover{text-decoration:none}
 .ps-btn.on{
   color:#fff;background:linear-gradient(135deg,var(--sky-500),var(--sky-700));
 }
-/* 开发者模式那个「+ 写新文章」推到最右边 */
 .posts-bar .dev-only{margin-left:auto}
 
 /* ==========================================================================
    搜索页：标签行 + 结果分区
    ==========================================================================
-   搜索页顶上是「全部 / 文章 / 作品 / 文件」四个标签，复用 .posts-switch /
-   .ps-btn 那套（文章页「列表 / 归档」用的就是它）—— 一样的东西不写两遍样式。
-
-   ⚠️ 但那边是 <a>，这边是 <button>：点了要原地重画，不能跳地址栏。
-      按钮自带系统灰底、系统字体和 cursor:default，得重置。
-   ⚠️ 三条都必须写成 button.ps-btn（多带一个元素选择器）。
-      只写 .ps-btn 的话和 .ps-btn:hover / .ps-btn.on 同权重，
-      谁赢看出现顺序，改一次顺序就翻车。 */
+   搜索页顶上是「全部 / 文章 / 作品 / 文件」四个标签，复用 .posts-switch / .ps-btn
+   那套（文章页「列表 / 归档」用的就是它），一样的东西不写两遍样式。
+   ⚠️ 但那边是 <a>，这边是 <button>：点了要原地重画，不能跳地址栏。按钮自带系统
+   灰底、系统字体和 cursor:default，得重置。
+   ⚠️ 三条都必须写成 button.ps-btn（多带一个元素选择器）。只写 .ps-btn 的话和
+   .ps-btn:hover / .ps-btn.on 同权重，谁赢看出现顺序，改一次顺序就翻车。 */
 button.ps-btn{background:none;font-family:inherit;cursor:pointer;line-height:normal}
 button.ps-btn:hover{background:var(--panel-strong)}
 /* 写在 :hover 后面 —— 同权重靠顺序决胜负，这样选中那枚悬停时也还是渐变底 */
 button.ps-btn.on{background:linear-gradient(135deg,var(--sky-500),var(--sky-700))}
-/* 标签上的条数：压小一点、淡一点，别跟标签名抢戏 */
 button.ps-btn i{font-style:normal;font-size:.82em;opacity:.72;margin-left:5px}
 
-/* 搜索结果按类分区。第一条紧跟着标签行，只在块与块之间拉开 */
 .search-block + .search-block{margin-top:34px}
 
-/* 文件那一摊是一行一个 —— 文件名可能很长，并排两列会挤断。
-   原来这行是写在模板里的内联 style，挪到这儿：搜索页的文件块也要同一套 */
 .grid.files{grid-template-columns:1fr}
 
 /* ==========================================================================
    网站导航页
    ==========================================================================
-   一个分类一节，节里是若干网站。数据在 data/sites.js，
-   开发者模式里的增删改存在 localStorage（键 kili.sites）。 */
+   一个分类一节，节里是若干网站。数据在 data/sites.js，开发者模式里的增删改存在
+   localStorage（键 kili.sites）。 */
 .site-cat{margin:0 0 30px}
 .sc-head{
   display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;
@@ -522,12 +497,11 @@ button.ps-btn i{font-style:normal;font-size:.82em;opacity:.72;margin-left:5px}
 }
 .sc-head b{font-size:1.06rem;font-weight:760;color:var(--text)}
 .sc-head small{color:var(--muted);font-size:.84rem}
-/* 分类头那组按钮推到最右边 */
 .sc-head .dev-row-act{margin-left:auto;align-self:center}
 
 .site-links{display:grid;gap:9px;grid-template-columns:repeat(auto-fill,minmax(268px,1fr))}
-/* ⚠️ 这一行是「普通 div + 拉伸链接」，不是把整行做成 <a> ——
-   行里还有开发者模式那两个按钮，<button> 套在 <a> 里是非法 HTML。 */
+/* ⚠️ 这一行是「普通 div + 拉伸链接」，不是把整行做成 <a> —— 行里还有开发者模式
+   那两个按钮，<button> 套在 <a> 里是非法 HTML。 */
 .site-link{
   position:relative;display:flex;align-items:center;gap:10px;
   padding:11px 14px;border-radius:var(--radius-sm);
@@ -535,7 +509,7 @@ button.ps-btn i{font-style:normal;font-size:.82em;opacity:.72;margin-left:5px}
   background-image:var(--glass-sheen);
   border:1px solid var(--panel-line);
   box-shadow:var(--panel-shadow);
-  transition:all .3s var(--anim);
+  transition:transform .3s var(--anim), box-shadow .3s var(--anim), border-color .3s var(--anim), background-color .3s var(--anim);
 }
 .site-link:hover{
   transform:translateY(-2px);
@@ -567,12 +541,9 @@ button.ps-btn i{font-style:normal;font-size:.82em;opacity:.72;margin-left:5px}
    文章编辑页（#/edit/new、#/edit/<id>）
    ==========================================================================
    整页，不是弹窗 —— 写文章要一大片地方，塞进小窗口里光文本框就剩两行高。 */
-/* 编辑页借了 .article 的排版（标题字号那些），但它不是给人读的文章，
-   76ch 那个阅读宽度会把两列表单挤成一团，这里放开 */
 .article.edit{max-width:none}
 .article.edit .dev-editor{margin:0 0 26px}
 
-/* 正文是 Markdown 源码，等宽字体写起来对齐得好看 */
 #edBody{font-family:var(--mono);font-size:.86rem;line-height:1.65;min-height:260px}
 
 /* ---- 实时预览 ---- */
@@ -589,18 +560,15 @@ button.ps-btn i{font-style:normal;font-size:.82em;opacity:.72;margin-left:5px}
 }
 .edit-preview h1{font-size:clamp(1.4rem,3.2vw,1.9rem);line-height:1.32;margin:.1em 0 .5em;font-weight:800;letter-spacing:-.3px}
 .edit-preview .body{color:var(--text);font-size:.95rem;line-height:1.85}
-/* 预览里那几个标签的间距和正文一致 */
 .edit-preview .chips{margin:0 0 4px}
 
 @media (max-width:640px){
-  /* 编辑页两列并排在手机上挤成一团，摊成一列 */
   #edBody{min-height:200px}
   .edit-preview{padding:16px 14px}
   .site-links{grid-template-columns:1fr}
   .site-link .dev-row-act{width:100%;justify-content:flex-start}
 }
 
-/* 只在开发者模式开着的时候，让封面能单独点 —— 普通访客点封面还是进文章 */
 html.dev-on .card .cover{
   position:relative;
   z-index:2;

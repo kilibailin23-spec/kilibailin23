@@ -1,16 +1,11 @@
-/* ==========================================================================
-   变量与调色板
-
-   所有 CSS 自定义属性都在这儿：天空蓝色阶、玻璃材质、暗色主题那三份声明。
-   改配色改这个文件，其它文件里的颜色全部走 var()。
-
-   这个文件是从原来的单文件 index.html 里拆出来的，内容没动过。
-   ========================================================================== */
+/* 变量与调色板 —— 全站所有 CSS 自定义属性都在这个文件里（换配色改这里） */
 
 /* ==========================================================================
    ① 调色板 —— 天空蓝 + 白
    ========================================================================== */
 :root{
+  /* ⚠️ 颜色变量有三份：这里（亮色）、html[data-theme="dark"]、@media (prefers-color-scheme:dark)，改颜色要三处一起改 */
+
   /* ---- 色板：浅蓝 → 白，最深只到 sky-700，没有深蓝 ---- */
   --sky-50:#f6fcff;
   --sky-100:#eaf7ff;
@@ -19,14 +14,10 @@
   --sky-400:#8fcbf1;
   --sky-500:#66b5ea;
   --sky-600:#3f9cd9;
-  --sky-700:#2b87c4;   /* 整站最深的一档，只用在小面积装饰上 */
+  --sky-700:#2b87c4;
 
   /* ---- 黑：只用在文字上 ---- */
-  --ink:#17191c;       /* 正文 / 标题 */
-  /* 次要文字：偏冷的蓝灰，不用纯黑，避免大片死黑。
-     这档从 #55768c 压深了一点 —— 面板改成半透明之后，背景照片最暗的地方
-     会透过面板，把次要文字压到 3.6:1（AA 要 4.5）。压深之后最坏情况 4.6:1。
-     色相没动，还是同一个蓝灰；想换回原来的观感就把这行改回 #55768c。 */
+  --ink:#17191c;
   --ink-2:#47647a;
 
   /* ---- 语义变量 ---- */
@@ -38,27 +29,16 @@
   --text:var(--ink);
   --muted:var(--ink-2);
 
-  /* 链接色。真正的浅蓝在白底上只有 2:1 对比度，读不了，
-     所以这里用一档偏亮的蓝（对白底 4.5:1，刚好达 WCAG AA）。
-     想更浅的观感就把这行改成 var(--ink) + 浅蓝下划线。 */
   --link:#146eb0;
   --link-hover:var(--ink);
   --link-rule:rgba(143,203,241,.75);
 
-  /* 玻璃拟态面板。
-     alpha 决定「透不透」：这里 / 面板背后是照片，所以要真的能看见照片，
-     才叫毛玻璃。之前给到 .88 基本等于一块白板，用户提的「你没有做毛玻璃」
-     就是这个。现在压到 .68 —— 照片能透出来，字还压得住。
-
-     字之所以压得住，靠的是外面那层 veil（见下面的 --bg-veil）：
-     背景先被 62% 的白色洗过一遍，面板再叠 .68 的白，
-     落到正文上的对比度跟纯白底差不多。改这两个值要一起看。 */
+  /* ⚠️ --panel 的 alpha 就是「透不透」，别调回 .85 以上（那就成一块白板了）；它和 --bg-veil 是一套，改一个要回头看另一个 */
   --panel:rgba(255,255,255,.68);
   --panel-soft:rgba(255,255,255,.58);
   --panel-strong:rgba(255,255,255,.86);
   --panel-line:rgba(143,203,241,.45);
   --panel-ring:rgba(102,181,234,.72);
-  /* 白色外发光 + 五层阴影阶梯。数值照抄他的 --aero-glow 那一条。 */
   --panel-shadow:
     0 0 20px rgba(255,255,255,.40),
     0 2px 4px rgba(0,0,0,.02),
@@ -66,7 +46,6 @@
     0 8px 16px rgba(0,0,0,.03),
     0 16px 32px rgba(0,0,0,.04),
     0 32px 64px rgba(0,0,0,.05);
-  /* 悬停时那一档，照抄他的 .glass-container:hover */
   --panel-shadow-lg:
     0 0 30px rgba(255,255,255,.30),
     0 4px 8px rgba(0,0,0,.03),
@@ -74,51 +53,24 @@
     0 16px 32px rgba(0,0,0,.05),
     0 32px 64px rgba(0,0,0,.06),
     0 64px 100px rgba(0,0,0,.08);
-  /* 内嵌高光边：左上 1px 白、右下 2px 暗、内部 20px 极淡白晕 —— 三段式，
-     这是他 .glass-container:after 上的 box-shadow。比单发一道上沿白边
-     更像一块有厚度的玻璃。 */
   --glass-bevel:
     inset 1px 1px 1px rgba(255,255,255,.15),
     inset -1px -1px 2px rgba(0,0,0,.30),
     inset 0 0 20px rgba(255,255,255,.02);
-  /* 面板表面那层白，两层叠：底层从上到下 .02→.10（他的 .glass-container 背景），
-     上层再补一道从上到下 .05→.015（他的 :after），叠出玻璃中间比上下都亮。 */
   --glass-sheen:
     linear-gradient(to bottom,rgba(255,255,255,.02) 70%,rgba(255,255,255,.10)),
     linear-gradient(to bottom,rgba(255,255,255,.05),rgba(255,255,255,.025) 50%,rgba(255,255,255,.015));
-  /* 模糊半径。之前为了「不发蓝」压到 3px，结果面板背后是照片时，
-     照片的细节原样透出来，看着像隔着塑料膜，不像毛玻璃。
-     现在面板本身够白（.68），把 backdrop 糊狠一点，「霜」的质感才出得来。 */
   --blur:12px;
-  /* 全站统一缓动曲线，照抄他的 --aero-animation */
   --anim:cubic-bezier(.25,.46,.45,.94);
 
-  /* 背景图上的遮罩：越白文字越清晰 */
   --veil-rgb:242,250,255;
   --bg-veil:.4;
-  /* 两张背景图：白天一张、夜里一张，叠在一起靠透明度交叉淡入。
-     值由 bootBackground() 按 SITE.bgDay / SITE.bgNight 写上来，这里只是兜底。 */
   --bg-day:none;
   --bg-night:none;
 
-  /* 英雄区背后的光晕，防止文字被背景图吃掉 */
   --hero-scrim:rgba(255,255,255,.33);
 
-  /* 彩虹镀膜（全息反光）。七种颜色各出两条色带，第二条的 stop 故意错开一点，
-     叠出「镭射纸」那种会随角度变色的感觉；只画一条的话就是七道死板的平行条纹。
-     角度统一由 --reflection-angle 控制，想改方向只动这一个值。
-     铺在哪儿见 styles/rainbow.css（全站玻璃板共用一份，哪几块镀那儿列了表）。
-
-     ⚠️ 这七个颜色是**浅色主题专用**的，别照抄参考站那套原色。
-     参考站那套是 rgba(216,15,15,.17) 一类的正红正绿正蓝，在它那种深色玻璃上
-     刚好；搬到本站这种接近白的浅色玻璃上就太冲了 —— 近白的底子会把饱和度
-     整个顶出来，七道色带各走各的，看着像一面脏兮兮的彩旗。
-     所以这里统一往本站的天蓝偏、降饱和、再一档档压淡（.30 一路走到 .09），
-     读起来是「一道冷色反光」，不是「七种颜色」。
-     最后两档是收尾的暖色，压得最狠，而且特意往**粉**里偏、不往黄里偏 ——
-     偏黄（比如 rgba(232,214,203)）落在白玻璃上会读成一块脏兮兮的土色。
-     暗色主题那份在下面 html[data-theme="dark"] 里重新给（那边本来就全是蓝白）。 */
-  --rainbow-alpha:1;                   /* 彩虹总强度，嫌重就往下调（见 rainbow.css） */
+  --rainbow-alpha:1;
   --reflection-angle:60deg;
   --reflection-1:rgba(130,192,236,.30);
   --reflection-2:rgba(158,203,239,.27);
@@ -127,6 +79,7 @@
   --reflection-5:rgba(205,194,238,.18);
   --reflection-6:rgba(226,198,224,.12);
   --reflection-7:rgba(228,206,214,.09);
+  /* ⚠️ 色带里引用的是 var(--reflection-N)，想改颜色改上面那七个就行，别重写这 14 条色带 */
   --reflection-gradients:
     linear-gradient(var(--reflection-angle),transparent 0%,  var(--reflection-1) 2%,  transparent 12%),
     linear-gradient(var(--reflection-angle),transparent 0%,  var(--reflection-1) 13%, transparent 15%),
@@ -146,33 +99,17 @@
   --accent:var(--sky-700);
   --accent-2:var(--sky-600);
 
-  /* 侧边栏。主内容靠 body 的 padding-left 让位，栏本身才能 fixed。
-     --rail 是「当前」宽度，展开态由 html[data-rail="open"] 重新赋值，
-     栏宽和让位宽度就一起动了，不用两头同步。 */
+  /* ---- 侧边栏 / 顶栏的尺寸与动画 ---- */
   --rail:72px;
-  --rail-open:208px;                              /* 展开后 */
-  --rail-gap:10px;                                /* 离窗口左/下边缘、离顶栏的缝 */
-  /* 顶栏离窗口上/左/右的缝。顶栏和侧边栏一样是浮起的（不贴顶），
-     所以它也需要一份边距。默认跟 --rail-gap 一样宽，两块板才对得齐。
-     窄屏时 --rail-gap 归零（侧边栏转成贴边的底部横条），但顶栏还得留缝，
-     所以这两个值是分开的，窄屏会在媒体查询里单独改 --edge。 */
+  --rail-open:208px;
+  --rail-gap:10px;
   --edge:10px;
-  /* body 要让位的总宽 = 栏宽 + 左右两道缝 */
   --shell:calc(var(--rail) + var(--rail-gap) * 2);
-  /* 侧边栏收展的时长 + 曲线。曲线照抄参考站的：末段会冲过头再弹回来，
-     就是那种「啪一下翻开」的手感。
-     重点：栏宽、body 的让位、顶栏的偏移**必须共用这一个值** ——
-     三者动画曲线只要差一点，中途就会错位（正文瞬移、顶栏还在滑）。 */
   --rail-anim:.38s cubic-bezier(.68,-.55,.27,1.55);
-  /* 顶栏高度，侧边栏从它下面开始。这个值 JS 会量出实际高度覆盖掉，
-     这里只是个兜底，免得脚本没跑起来时侧边栏钻到顶栏底下。 */
   --bar-h:84px;
-  /* 卡片上那层方格纸纹理的线色。不想要纹理就把它设成 transparent */
   --grid-line:rgba(102,181,234,.30);
-  /* 搜索命中词的高亮底色 */
   --mark-bg:var(--sky-200);
 
-  /* 圆角刻度照他的：主力 8px（他 CSS 里出现 21 次），次级 6px，小件 4px */
   --radius:8px;
   --radius-sm:6px;
   --maxw:1080px;
@@ -190,7 +127,6 @@ html[data-theme="dark"]{
   --text:#eef6ff;
   --muted:#9fbdd6;
 
-  /* 暗底上链接反过来用浅蓝，才看得清 */
   --link:#b6dff8;
   --link-hover:#d6eefc;
   --link-rule:rgba(143,203,241,.45);
@@ -200,30 +136,18 @@ html[data-theme="dark"]{
   --panel-strong:rgba(14,26,38,.88);
   --panel-line:rgba(143,203,241,.20);
   --panel-ring:rgba(143,203,241,.48);
-  /* 暗色照抄他的：白发光换成两层黑投影，不再用亮色那套阶梯 */
   --panel-shadow:
     0 0 20px rgba(0,0,0,.30),
     0 6px 30px rgba(0,0,0,.25);
   --panel-shadow-lg:
     0 10px 25px rgba(255,255,255,.10),
     0 5px 10px rgba(255,255,255,.05);
-  /* 暗色下才上三段式斜角 + 135° 斜向渐变（他亮色用的是上下渐变，暗色才切斜的） */
   --glass-bevel:
     inset 1px 1px 1px rgba(255,255,255,.15),
     inset -1px -1px 2px rgba(0,0,0,.30),
     inset 0 0 20px rgba(255,255,255,.02);
   --glass-sheen:
     linear-gradient(135deg,rgba(255,255,255,.08),rgba(255,255,255,.02) 20%,rgba(255,255,255,0) 20%,rgba(0,0,0,.10) 80%,rgba(0,0,0,.01));
-  /* 暗底上彩虹要换成冷白/浅蓝调 —— 直接沿用亮色那七种彩色会发脏发闷。
-     七条色带本身（--reflection-gradients）不用重写：它里面引用的是
-     var(--reflection-N)，在这儿改颜色，那边自动跟着变。 */
-  /* 暗色的彩虹比浅色那份压得狠得多（大约只有一半）。
-     原因是数学：浅色面板本身已经接近全白，往上叠一层天蓝是**压暗**它，
-     百分比变化很小；暗色面板接近全黑，同一层天蓝是**提亮**它几十个百分点 ——
-     同样的 alpha，暗色这边看着要亮好几倍。早先顶栏上那条明显的灰白污渍
-     就是这么来的：一栏亮、满页不亮，看着像脏了一块而不是一层反光。
-     改的时候记住两份的观感（不是数值）要往一处靠。
-     ⚠️ 这份在 @media (prefers-color-scheme:dark) 里还有一份一模一样的，一起改。 */
   --reflection-1:rgba(223,246,252,.12);
   --reflection-2:rgba(235,245,250,.10);
   --reflection-3:rgba(215,235,245,.12);
@@ -232,9 +156,7 @@ html[data-theme="dark"]{
   --reflection-6:rgba(155,200,230,.13);
   --reflection-7:rgba(135,190,225,.09);
 
-  /* 注意：--bg-veil 别在这里写。bootBackground() 会把它写成 <html> 的行内样式，
-     行内样式压过一切选择器，写在这儿也不会生效（改了会以为没生效，白折腾）。
-     遮罩浓度统一在 SITE.bgVeil 调，亮暗两套共用。 */
+  /* ⚠️ --bg-veil 别在这里声明：bootBackground() 把它写成了 <html> 的行内样式，行内样式压过一切选择器，写在这儿也不会生效 */
   --veil-rgb:8,20,32;
   --hero-scrim:rgba(8,20,32,.58);
 
@@ -272,12 +194,6 @@ html[data-theme="dark"]{
       inset 0 0 20px rgba(255,255,255,.02);
     --glass-sheen:
       linear-gradient(135deg,rgba(255,255,255,.08),rgba(255,255,255,.02) 20%,rgba(255,255,255,0) 20%,rgba(0,0,0,.10) 80%,rgba(0,0,0,.01));
-    /* 暗色的彩虹比浅色那份压得狠得多（大约只有一半）。
-       原因是数学：浅色面板本身已经接近全白，往上叠一层天蓝是**压暗**它，
-       百分比变化很小；暗色面板接近全黑，同一层天蓝是**提亮**它几十个百分点 ——
-       同样的 alpha，暗色这边看着要亮好几倍。早先顶栏上那条明显的灰白污渍
-       就是这么来的：一栏亮、满页不亮，看着像脏了一块而不是一层反光。
-       改的时候记住两份的观感（不是数值）要往一处靠。 */
     --reflection-1:rgba(223,246,252,.12);
     --reflection-2:rgba(235,245,250,.10);
     --reflection-3:rgba(215,235,245,.12);
@@ -285,8 +201,6 @@ html[data-theme="dark"]{
     --reflection-5:rgba(175,210,235,.13);
     --reflection-6:rgba(155,200,230,.13);
     --reflection-7:rgba(135,190,225,.09);
-    /* --bg-veil 同上：它被写成了 <html> 的行内样式，在这里声明不会生效。
-       浓度统一在 SITE.bgVeil 调。 */
     --veil-rgb:8,20,32;
     --hero-scrim:rgba(8,20,32,.58);
     --accent:var(--sky-300);
@@ -295,103 +209,3 @@ html[data-theme="dark"]{
     --mark-bg:rgba(143,203,241,.26);
   }
 }
-
-*{box-sizing:border-box}
-[hidden]{display:none!important}
-html{scroll-behavior:smooth}
-
-body{
-  margin:0;
-  min-height:100vh;
-  padding-left:var(--shell);   /* 给侧边栏让位（栏宽 + 左右的缝） */
-  /* 顶栏是 sticky 且 top:var(--edge)。body 不加这条上内边距的话，
-     顶栏在滚动位置 0 处会被「按下去」10px，而它占的位置还在原地，
-     于是正好压住下面正文的脑袋。留出这条缝，它一开始就待在该待的地方。 */
-  padding-top:var(--edge);
-  font-family:var(--font);
-  color:var(--text);
-  background-color:var(--bg);
-  background-image:var(--bg-grad);
-  background-attachment:fixed;
-  line-height:1.75;
-  -webkit-font-smoothing:antialiased;
-  /* 只留这一条 transition。同一个规则里写两条的话后一条会把前一条整个覆盖掉，
-     padding-left 就不会动 —— 正文瞬移而顶栏平滑滑走，动画中途两边对不齐。 */
-  transition:background-color .35s var(--anim), color .35s var(--anim), padding-left var(--rail-anim);
-}
-
-/* ---- 背景图层：两张照片 + 遮罩 + 粒子，都压在内容下面 ----
-   四层的 z-index 是排好的：
-     -4 白天照片  -3 夜间照片  -2 遮罩  -1 粒子
-   粒子压在遮罩**上面**（和参考站一致），颗粒才不会被遮罩洗淡；
-   但照片已经被遮罩洗过一遍，所以文字该清楚还是清楚。
-   它们都是负层级，得靠 body 不构成层叠上下文才能沉到内容底下 ——
-   别给 body 加 transform / filter / opacity。 */
-.bg-layer,.bg-veil,.particle-layer{
-  position:fixed; inset:0; pointer-events:none;
-}
-.bg-layer{
-  background-size:cover;
-  background-position:center;
-  background-repeat:no-repeat;
-}
-.bg-day{z-index:-4;background-image:var(--bg-day)}
-/* 夜间图平时完全透明，靠 html[data-theme] 把 opacity 推到 1 做交叉淡化。
-   为什么不直接换 background-image —— 因为那个属性不能过渡，
-   切换主题时会「啪」地跳一下。 */
-.bg-night{
-  z-index:-3;background-image:var(--bg-night);
-  opacity:0;transition:opacity .7s var(--anim);
-}
-html[data-theme="dark"] .bg-night{opacity:1}
-@media (prefers-color-scheme:dark){
-  html:not([data-theme="light"]) .bg-night{opacity:1}
-}
-.bg-veil{
-  z-index:-2;
-  background:rgba(var(--veil-rgb), var(--bg-veil));
-  transition:background .35s;
-}
-/* 粒子层。canvas 由 bootParticles() 撑满，这里只负责定位和裁剪 */
-.particle-layer{z-index:-1;overflow:hidden}
-.particle-layer canvas{display:block;width:100%;height:100%}
-
-/* 玻璃面板的材质不在某个公共类里，而是拆成了几个变量，上面 :root 那段有注释。
-   各个面板（#rail / header / .card / .widget …）各自写
-   background + background-image:var(--glass-sheen) + border + var(--panel-shadow)
-   + var(--glass-bevel) + blur(var(--blur))，
-   改材质就改那几个变量，一处生效全站。
-   （原来这里有个 .glass 类，全站一处都没引用，是死代码，已经删掉。） */
-
-/* 不支持 backdrop-filter 的浏览器：把面板调实，保证能看清 */
-@supports not ((backdrop-filter:blur(2px)) or (-webkit-backdrop-filter:blur(2px))){
-  :root{ --panel:rgba(255,255,255,.96); --panel-soft:rgba(255,255,255,.92) }
-  html[data-theme="dark"]{ --panel:rgba(12,30,48,.94); --panel-soft:rgba(12,30,48,.86) }
-  /* 上面两条盖不住 @media 里那条 —— 那个选择器是 html:not([data-theme="light"])，
-     优先级比 :root 高。漏掉这里的话，「系统开了深色 + 浏览器不支持毛玻璃」的
-     用户会拿到半透明面板叠在花背景上，正好是这段兜底要防的情况。
-     放在最后，同优先级下后写的赢。 */
-  @media (prefers-color-scheme:dark){
-    html:not([data-theme="light"]){ --panel:rgba(12,30,48,.94); --panel-soft:rgba(12,30,48,.86) }
-  }
-}
-
-a{color:var(--link);text-decoration:none;transition:color .18s}
-a:hover{
-  color:var(--link-hover);
-  text-decoration:underline;
-  text-decoration-color:var(--link-rule);
-  text-decoration-thickness:2px;
-  text-underline-offset:3px;
-}
-/* 正文里的链接要一眼能认出来，所以常驻下划线 */
-.article .body a,.view .empty a{
-  color:var(--link);
-  text-decoration:underline;
-  text-decoration-color:var(--link-rule);
-  text-underline-offset:3px;
-}
-.article .body a:hover{color:var(--link-hover);text-decoration-thickness:2px}
-img{max-width:100%;display:block}
-hr{border:0;border-top:1px solid var(--panel-line);margin:32px 0}
-
