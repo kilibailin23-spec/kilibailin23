@@ -9,7 +9,6 @@ header::after,
 #rail::after,
 .home-panel::after,
 .card::after,
-.cat-card::after,
 .home-contact::after,
 .toc::after,
 .article .body::after,
@@ -28,7 +27,6 @@ header,
 #rail,
 .home-panel,
 .card,
-.cat-card,
 .home-contact,
 .toc,
 .article .body,
@@ -38,7 +36,6 @@ footer{isolation:isolate}
    镀膜是 fixed 的画出来差不多，但 border-radius:inherit 的四个角会落到错的地方。
    （.card 在 layout.css 里本来就是 relative，不用重复写。） */
 .home-panel,
-.cat-card,
 .home-contact,
 .toc,
 .article .body,
@@ -48,7 +45,6 @@ footer{position:relative}
    选择器，不能一刀切：.card 只在首页大面板里才是叠着的，别的页它直接躺在页面背景上，
    一起打折会暗一截。折扣约等于「1 − 卡面不透明度」，加起来刚好回到和父级一样亮。 */
 .home-panel .card,
-.home-panel .cat-card,
 .home-contact{--rb-scale:.55}
 
 
@@ -72,7 +68,6 @@ footer{position:relative}
   #rail::after,
   .home-panel::after,
   .card::after,
-  .cat-card::after,
   .home-contact::after,
   .toc::after,
   .article .body::after,

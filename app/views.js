@@ -112,16 +112,3 @@ function workCard(w, q){
     <div class="chips">${chipsHTML(w.tags, false)}</div>
   </article>`
 }
-
-/* ⚠️ 「网站导航」这张卡不能塞进 CATEGORIES —— 那是文章分类的数据源，#/cat/<key> 会串味 */
-function sitesCardHTML(){
-  const cats = mergedSites()
-  if(!cats.length) return ''
-  const n = cats.reduce((sum, c) => sum + ((c.links || []).length), 0)
-  return `
-    <a class="cat-card" href="#/sites">
-      <span class="ico">${icoHTML('compass')}</span>
-      <b>网站导航</b>
-      <small>${n ? n + ' 个常去的站' : '还没收站点'}</small>
-    </a>`
-}

@@ -62,19 +62,6 @@ ${bannerHTML()}
       </section>
 
       <section>
-        <div class="sec-head"><h2><span class="sec-ico">${icoHTML('compass')}</span>快捷导航</h2><a class="more" href="#/sites">网站导航 →</a></div>
-        <div class="grid cats">
-          ${CATEGORIES.map(c => `
-            <a class="cat-card" href="#/cat/${encodeURIComponent(c.key)}">
-              <span class="ico">${icoHTML(c.icon)}</span>
-              <b>${esc(c.name)}</b>
-              <small>${esc(c.desc)}</small>
-            </a>`).join('')}
-          ${sitesCardHTML()}
-        </div>
-      </section>
-
-      <section>
         <div class="sec-head"><h2><span class="sec-ico">${icoHTML('works')}</span>作品</h2><a class="more" href="#/works">全部 →</a></div>
         <div class="grid">${mergedWorks().slice(0,3).map(w => workCard(w)).join('')}</div>
       </section>
