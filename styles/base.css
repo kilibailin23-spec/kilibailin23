@@ -12,12 +12,27 @@ body{
   font-family:var(--font);
   color:var(--text);
   background-color:var(--bg);
-  background-image:var(--bg-grad);
-  background-attachment:fixed;
   line-height:1.75;
   -webkit-font-smoothing:antialiased;
   /* ⚠️ 只能有这一条 transition：同一个规则里写两条的话后一条会把前一条整个覆盖掉 */
   transition:background-color .35s var(--anim), color .35s var(--anim), padding-left var(--rail-anim);
+}
+
+/* ⚠️ 背景渐变必须挂在这个 position:fixed 的层上，**别挪回 body 的 background-image**。
+   原因只有一个字：贵。
+   挂在 body 上时，为了让渐变相对视口（而不是相对可能有几千像素高的 body 盒子），
+   必须配 background-attachment:fixed —— 而这样一来滚动时浏览器就没法把画好的背景
+   平移一下了事，得**每帧把整个视口重画一遍**。那三个渐变是按像素定尺寸的
+   （1100×620、900×560），每帧重算一次，全站**每一页**都在付这笔钱，手机尤其明显。
+   换成一个 fixed 的层之后，渐变只画一次，之后的滚动全是平移合成，成本几乎为零。
+
+   视觉上**一模一样**：CSS 规定 html 没有背景时，body 的背景会传播到整个 canvas 上，
+   位置在所有负 z-index 元素之下。这里取 -5，正好接在 .bg-day(-4) 下面 ——
+   跟原来 body 背景所处的层级完全一致。 */
+body::before{
+  content:'';position:fixed;inset:0;z-index:-5;
+  pointer-events:none;
+  background-image:var(--bg-grad);
 }
 
 /* ---- 背景图层：两张照片 + 遮罩 + 粒子，都压在内容下面 ---- */
