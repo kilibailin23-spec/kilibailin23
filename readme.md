@@ -201,7 +201,7 @@ console.log('代码块')
 
 ### ③ 分类 `CATEGORIES`
 
-就是首页那排「快捷导航」大图标卡。文章的 `cat` 字段填这里的 `key`：
+文章的 `cat` 字段填这里的 `key`：
 
 ```js
 const CATEGORIES = [
@@ -212,14 +212,15 @@ const CATEGORIES = [
 ```
 
 - `icon` 是 `icons/` 文件夹里的**文件名**（写 `tech` 就是 `icons/tech.svg`），不是 emoji
-- 点卡片 = 列出 `cat` 等于这个 key 的文章
-- 文章 `cat` 填了这里没有的值，就只能在标签里找到，首页导航不会显示它
-- 不想要这个区块：把 `CATEGORIES` 改成 `[]`，首页那一节会自动消失
+- 文章 `cat` 填了这里没有的值，文章上照样显示，但点进分类页是空的
+- 不想要哪个分类就从数组里删掉那行
 
-> 💡 快捷导航那排**还有第 5 张卡**：「网站导航」，指向 `#/sites`，内容取自 `SITES`。
-> 它**不归 `CATEGORIES` 管** —— `CATEGORIES` 是文章分类的数据源，`#/cat/<key>` 靠 `key`
-> 对上，往里塞这个会把分类页弄脏。它是写死在 `viewHome()` 里的，一个网站分类都没有时
-> 不显示。那排 `.grid.cats` 每行放得下 5 张，所以 `CATEGORIES` 写 4 个正好排满一行。
+> 💡 它管两件事：写文章时下拉框里的选项（`app/view-posts.js`），以及把文章上的
+> `cat` 翻成中文名显示（`app/views.js` 的 `catName`）。分类页 `#/cat/<key>` 照常能用，
+> **入口在文章列表里每篇文章的分类名上**，点一下就按分类筛。
+>
+> 首页原来那排「快捷导航」大图标卡已经删掉了（跟侧边栏重得太多），所以 `desc`
+> 这个字段目前只有编辑表单在用，首页不再显示它。
 
 ### ④ 作品 `WORKS`
 
@@ -554,7 +555,7 @@ allowDark: true,   // 改 false → 只剩亮色，主题按钮消失
 
 | 地址 | 页面 |
 |---|---|
-| `#/` | 首页（最新动态 + 快捷导航 + 作品） |
+| `#/` | 首页（最新动态 + 作品） |
 | `#/posts` | 全部文章（顶部可切「列表 / 归档」两种视图） |
 | `#/archive` | 归档视图，按年月分组 |
 | `#/post/文章id` | 某篇文章 |
@@ -599,7 +600,7 @@ allowDark: true,   // 改 false → 只剩亮色，主题按钮消失
 | 横幅 | `.home-banner` | 居中那行大字（`SITE.banner`），背后有光晕 |
 | 关于我 | `.home-about` | 头像（`.ha-avatar`）+ 招呼语和自我介绍 + 右侧签名列 |
 | 联系方式横条 | `.home-contact` | 一条窄玻璃条，横在中间当分隔 |
-| 最新动态 / 快捷导航 / 作品 | `section` + `.grid` | 三节卡片，节与节之间一条细线断开 |
+| 最新动态 / 作品 | `section` + `.grid` | 两节卡片，节与节之间一条细线断开 |
 
 前三块的文字内容全在 `SITE` 里（见 ① 站点信息）。
 
@@ -749,7 +750,7 @@ const NAV = [
 header::after,
 #rail::after,
 .home-panel::after,
-.card::after, .cat-card::after,   /* 卡片 */
+.card::after,                     /* 卡片 */
 .home-contact::after,             /* 首页那条「联系我」 */
 .toc::after, .article .body::after,  /* 文章目录 + 正文那块 */
 footer::after{
@@ -795,7 +796,6 @@ footer::after{
 
 ```css
 .home-panel .card,
-.home-panel .cat-card,
 .home-contact{ --rb-scale: .55 }   /* 折扣约等于「1 − 卡面不透明度」 */
 ```
 
