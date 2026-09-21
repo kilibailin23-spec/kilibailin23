@@ -342,7 +342,9 @@ html[data-theme="dark"] .card::before{background:linear-gradient(90deg,transpare
 .back:hover{color:var(--link-hover)}
 
 /* ---- 下载 ---- */
-.dl{
+/* 列表项（.dl）和文件夹条目（.dl-folder）共用一套外观；
+   网格卡片 .dl-card 只共用里面的图标和下载按钮（见下面那两条并列选择器） */
+.dl, .dl-folder{
   display:flex;align-items:center;gap:16px;
   background:var(--panel);
   border:1px solid var(--panel-line);
@@ -353,13 +355,13 @@ html[data-theme="dark"] .card::before{background:linear-gradient(90deg,transpare
   backdrop-filter:blur(var(--blur));
   transition:transform .22s,box-shadow .22s,border-color .22s,background .22s;
 }
-.dl:hover{
+.dl:hover, .dl-folder:hover{
   transform:translateY(-4px);
   box-shadow:var(--panel-shadow-lg);
   border-color:var(--panel-ring);
   background:var(--panel-strong);
 }
-.dl .ico{
+.dl .ico, .dl-folder .ico, .dl-card .ico{
   width:46px;height:46px;flex:0 0 auto;border-radius:8px;display:grid;place-items:center;
   background:var(--panel-soft);
   border:1px solid var(--panel-line);
@@ -368,7 +370,7 @@ html[data-theme="dark"] .card::before{background:linear-gradient(90deg,transpare
 .dl .info{min-width:0;flex:1}
 .dl .info b{display:block;font-weight:700;font-size:.99rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .dl .info small{color:var(--muted);font-size:.83rem}
-.dl .get{
+.dl .get, .dl-card .get{
   flex:0 0 auto;padding:9px 18px;border-radius:6px;font-size:.88rem;font-weight:700;
   background:linear-gradient(135deg,var(--sky-300),var(--sky-200));
   color:var(--ink);
@@ -376,7 +378,66 @@ html[data-theme="dark"] .card::before{background:linear-gradient(90deg,transpare
   box-shadow:0 6px 16px rgba(102,181,234,.35), inset 0 1px 0 rgba(255,255,255,.75);
   transition:transform .18s,box-shadow .18s;
 }
-.dl .get:hover{text-decoration:none;transform:translateY(-1px);box-shadow:0 10px 22px rgba(102,181,234,.48), inset 0 1px 0 rgba(255,255,255,.75)}
+.dl .get:hover, .dl-card .get:hover{text-decoration:none;transform:translateY(-1px);box-shadow:0 10px 22px rgba(102,181,234,.48), inset 0 1px 0 rgba(255,255,255,.75)}
+
+/* ---------- 下载页：文件夹列表 / 视图切换 / 翻页 ---------- */
+/* 文件夹条目整行就是个 <button>，按钮自带的行头（字体、居中、灰底）都得重置 */
+.dl-folder{
+  width:100%;text-align:left;font-family:inherit;font-size:inherit;
+  color:inherit;cursor:pointer;margin:0 0 14px;
+}
+.dl-folder b{font-weight:700;font-size:.99rem;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dl-folder small{color:var(--muted);font-size:.83rem;margin-left:auto;flex:0 0 auto}
+.dl-folder .go{color:var(--muted);font-size:1.15rem;line-height:1;flex:0 0 auto}
+
+/* 网格视图：一行 5 个。
+   ⚠️ 不复用 .grid.files —— 那条 grid-template-columns:1fr 是 content.css 里的顶层规则，
+   特异性 (0,2,0)，而媒体查询**不增加特异性**。在它上面写 auto-fill、再指望窄屏那条
+   .grid{grid-template-columns:1fr} 帮它降回单列，是行不通的（照样是多列）。另起一个类名，
+   降级规则自己写全，就在下面。 */
+.dl-grid{display:grid;gap:18px;grid-template-columns:repeat(5,1fr)}
+.dl-card{
+  display:flex;flex-direction:column;gap:8px;
+  background:var(--panel);
+  border:1px solid var(--panel-line);
+  border-radius:var(--radius);
+  padding:18px;
+  box-shadow:var(--panel-shadow), var(--glass-bevel);
+  -webkit-backdrop-filter:blur(var(--blur));
+  backdrop-filter:blur(var(--blur));
+  transition:transform .22s,box-shadow .22s,border-color .22s,background .22s;
+}
+.dl-card:hover{
+  transform:translateY(-4px);
+  box-shadow:var(--panel-shadow-lg);
+  border-color:var(--panel-ring);
+  background:var(--panel-strong);
+}
+/* ⚠️ 文件名在格子里**必须**能换行。.dl .info b 那条的 nowrap + ellipsis 是给整行用的，
+   格子比整行窄得多，照搬过去长名字会被截断而不是折行。 */
+.dl-card b{font-weight:700;font-size:.95rem;overflow-wrap:anywhere}
+.dl-card small{color:var(--muted);font-size:.8rem;overflow-wrap:anywhere}
+.dl-card .get{margin-top:auto;text-align:center}
+.dl-card .dev-row-act{justify-content:flex-start}
+
+@media (max-width:1100px){ .dl-grid{grid-template-columns:repeat(3,1fr)} }
+@media (max-width:640px){ .dl-grid{grid-template-columns:repeat(2,1fr)} }
+
+/* 面包屑：「文件下载 / plus」，前一段是个按钮，点它退回文件夹列表 */
+.dl-crumb{background:none;border:0;padding:0;font:inherit;color:inherit;cursor:pointer;transition:color .18s}
+.dl-crumb:hover{color:var(--sky-700);text-decoration:underline}
+.dl-sep{color:var(--muted);font-weight:400;margin:0 8px}
+.dl-cur{color:var(--muted)}
+
+/* 视图切换推到这一行的右边（.posts-bar 本来就是 flex） */
+.dl-switch{margin-left:auto}
+
+/* 翻页控件 */
+.dl-pager{display:flex;align-items:center;justify-content:center;gap:14px;margin:26px 0 0}
+.dl-page-num{font-size:.88rem;color:var(--muted);font-variant-numeric:tabular-nums}
+
+/* 翻页/切视图之后滚到这儿。顶栏是 sticky 的（aero.css 的 header），不留出这段余量会被它盖住 */
+#dlTop{scroll-margin-top:104px}
 
 .empty{
   text-align:center;color:var(--muted);padding:58px 20px;

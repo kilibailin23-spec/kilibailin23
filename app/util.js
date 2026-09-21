@@ -136,6 +136,36 @@ function mergedWorks(){
 function mergedFiles(){
   return typeof FILES === 'undefined' ? [] : mergeOverride(FILES, LS_FILES, f => f.name)
 }
+
+/* 文件夹归属：先看条目自己的 folder 字段，没写就从 file 路径里解析子目录名 ——
+   './files/plus/弹球.zip' → 'plus'，'./files/简历.pdf' → ''（未分类）。
+   多级子目录整体算一个名字：'./files/a/b/x.zip' → 'a/b'，正好是面包屑要显示的局部路径。
+   外链条目（file 写成 https://…）解析不出来，也归未分类。 */
+function folderOf(f){
+  if(f && typeof f.folder === 'string' && f.folder.trim()) return f.folder.trim()
+  const m = /^\.?\/?files\/(.+)\/[^\/]+$/.exec((f && f.file) || '')
+  return m ? m[1] : ''
+}
+
+/* 下载页第一层的文件夹列表：现有文件归属的去重集合 —— 有文件才有文件夹。
+   返回 [{ name, count, time }]；time 取这个文件夹里最新那个文件的时间，
+   按时间排序时靠它；name 为 '' 的那条是未分类。
+   ⚠️ 这里**不排序** —— 怎么排由下载页的视图状态决定（见 app/view-others.js 的
+   sortFolders）。排在这儿会被下游盖掉，反倒让人以为顺序是固定的。 */
+function mergedFolders(){
+  const hit = Object.create(null)
+  const order = []
+  mergedFiles().forEach(f => {
+    const k = folderOf(f)
+    if(!(k in hit)){ hit[k] = { name: k, count: 0, time: '' }; order.push(k) }
+    const c = hit[k]
+    c.count++
+    const t = String(f.time || '')
+    if(t > c.time) c.time = t
+  })
+  return order.map(k => hit[k])
+}
+
 function mergedSites(){
   return typeof SITES === 'undefined' ? [] : mergeOverride(SITES, LS_SITES, s => s.key)
 }
@@ -301,11 +331,18 @@ function readAnyFile(file, max, done){
   fr.readAsDataURL(file)
 }
 
+/* ⚠️ 分档要跟 tools/build-files.js 里那个 humanSize 一模一样 ——
+   一边是上传文件时算的，一边是打包清单时算的。规矩要是不一样，
+   同一个文件「刚上传」和「重新打包之后」会显示成两个数。 */
 function humanSize(n){
   if(!n && n !== 0) return ''
   if(n < 1024) return n + ' B'
-  if(n < 1024 * 1024) return (n / 1024).toFixed(1) + ' KB'
-  return (n / 1024 / 1024).toFixed(2) + ' MB'
+  if(n < 1048576){
+    const kb = n / 1024
+    return (kb < 10 ? kb.toFixed(1) : Math.round(kb)) + ' KB'
+  }
+  if(n < 1073741824) return (n / 1048576).toFixed(1) + ' MB'
+  return (n / 1073741824).toFixed(2) + ' GB'
 }
 
 /* ---------- 开发者模式开着没有 ---------- */
@@ -329,6 +366,26 @@ function today(){
   const d = new Date()
   const p = n => (n < 10 ? '0' : '') + n
   return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate())
+}
+
+/* 时间戳，定长 'YYYY-MM-DD HH:MM'。这么写的用意是**字符串比大小就是比时间**：
+   下载页按上传时间排序时直接 localeCompare 就行，不用先 parse 成 Date 再比。
+   ⚠️ 格式一改排序就废，要动得连 tools/build-files.js 里那个 stamp() 一起改。 */
+function stamp(d){
+  const p = n => (n < 10 ? '0' : '') + n
+  return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) +
+         ' ' + p(d.getHours()) + ':' + p(d.getMinutes())
+}
+function nowStamp(){ return stamp(new Date()) }
+
+/* 文件名去掉扩展名：'弹球.zip' → '弹球'。上传时拿它当默认的显示名。
+   ⚠️ 后缀必须**字母开头**，这样 'v1.2' 这种版本号不会被啃成 'v1'；代价是
+   '.7z' 这类数字开头的后缀认不出来 —— 少见，忍了。
+   啃没了就原样返回：宁可不减，也不能给出个空名字。 */
+function stemOf(name){
+  const s = String(name || '')
+  const t = s.replace(/\.[A-Za-z][A-Za-z0-9]{0,7}$/, '')
+  return t || s
 }
 
 function makePostId(title){

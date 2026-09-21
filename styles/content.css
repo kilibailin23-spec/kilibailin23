@@ -150,6 +150,14 @@ footer .links{display:flex;gap:16px;justify-content:center;flex-wrap:wrap;margin
   background:var(--panel);border:1px solid var(--panel-line);
 }
 .dev-field input:focus{outline:none;border-color:var(--sky-400);box-shadow:0 0 0 3px rgba(102,181,234,.22)}
+/* 上传时自动算出来的那两栏（路径、大小）不给改：压暗 + 虚线框 + 默认光标，
+   一眼看出「这不是留给你填的」，省得点进去发现打不了字才反应过来。
+   ⚠️ :focus 那条也得跟着重写 —— 不然点一下照样冒蓝边，看着还是像能编辑。 */
+.dev-field input[readonly]{
+  background:transparent;color:var(--muted);
+  border-style:dashed;cursor:default;
+}
+.dev-field input[readonly]:focus{border-color:var(--panel-line);box-shadow:none;outline:none}
 .dev-err{margin:0 0 12px;color:#c0392b;font-size:.86rem}
 .dev-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
 .dev-btn{
@@ -475,6 +483,10 @@ button.ps-btn:hover{background:var(--panel-strong)}
 /* 写在 :hover 后面 —— 同权重靠顺序决胜负，这样选中那枚悬停时也还是渐变底 */
 button.ps-btn.on{background:linear-gradient(135deg,var(--sky-500),var(--sky-700))}
 button.ps-btn i{font-style:normal;font-size:.82em;opacity:.72;margin-left:5px}
+/* 翻到头/到尾的翻页按钮：变灰但留在原位，免得点下去没反应还以为是坏了。
+   ⚠️ 必须写在 :hover 后面 —— 同权重靠顺序决胜负，早写一步就被 :hover 盖掉。 */
+button.ps-btn[disabled]{opacity:.35;cursor:default;background:none;color:var(--muted)}
+button.ps-btn[disabled]:hover{background:none;color:var(--muted)}
 
 .search-block + .search-block{margin-top:34px}
 

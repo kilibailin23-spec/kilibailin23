@@ -149,6 +149,35 @@ function bootDelegates(){
   view.addEventListener('click', e => {
     if(!e.target || !e.target.closest) return
 
+    /* 下载页：进出文件夹、切视图、翻页、改排序。都是查看态的交互，跟开发者模式无关，
+       所以挂在这儿而不是 dev.js 那摊里。状态变量在 view-others.js 顶上。
+       ⚠️ 重画必须用 paintView(true) 保留滚动 —— render() 会 scrollTo(0,0)，
+       翻页时把用户一路甩回页面最顶上。改成滚到列表标题那儿就够了。 */
+    const dl = e.target.closest('[data-dl-root],[data-dl-folder],[data-dl-view],[data-dl-page],[data-dl-sort]')
+    if(dl){
+      if(dl.hasAttribute('data-dl-root')){
+        DL_FOLDER = null; DL_PAGE = 1
+      } else if(dl.hasAttribute('data-dl-folder')){
+        /* 值是空串时表示「未分类」，照样是个合法文件夹，别拿 if(x) 判 */
+        DL_FOLDER = dl.getAttribute('data-dl-folder'); DL_PAGE = 1
+      } else if(dl.hasAttribute('data-dl-view')){
+        DL_VIEW = dl.getAttribute('data-dl-view') === 'grid' ? 'grid' : 'list'
+        lsSet('kili.dl.view', DL_VIEW)
+        DL_PAGE = 1        /* 每页容量从 10 变 30，页码没法对应，回第一页 */
+      } else if(dl.hasAttribute('data-dl-sort')){
+        DL_SORT = dl.getAttribute('data-dl-sort') === 'name' ? 'name' : 'time'
+        lsSet('kili.dl.sort', DL_SORT)
+        DL_PAGE = 1        /* 整个顺序都变了，还停在第 3 页没有意义 */
+      } else {
+        const p = parseInt(dl.getAttribute('data-dl-page'), 10)
+        if(!isNaN(p)) DL_PAGE = p
+      }
+      paintView(true)
+      const top = document.getElementById('dlTop')
+      if(top) top.scrollIntoView({ block:'start' })
+      return
+    }
+
     /* ⚠️ 目录跳转必须 preventDefault：href="#h-xxx" 会被 hashchange 当成路由跳走 */
     const t = e.target.closest('[data-toc]')
     if(t){

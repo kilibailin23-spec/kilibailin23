@@ -548,22 +548,60 @@ function openFileSheet(name){
   fileEditing = f ? f.name : null
   filePending = null
 
+  /* 新建时不让手打路径和大小 —— 那俩是机器该算的东西：路径跟着「文件夹 +
+     上传的文件名」拼，大小从文件本体读。编辑已有条目时全放开，改路径、
+     挂网盘外链都得走这儿。
+     ⚠️ readonly 是属性，写成 readonly="false" 一样是只读，只能整个不写。 */
+  const isNew = !f
+  const cur = f ? folderOf(f) : ''
+  const known = mergedFolders().filter(c => c.name)
+  /* 编辑一个「文件夹已经空掉」的条目时，下拉里没有这一项，得补进去 ——
+     不然会默默选中上面的「未分类」，一保存路径就丢了 */
+  const orphan = (cur && !known.some(c => c.name === cur))
+    ? `<option value="${esc(cur)}" selected>${esc(cur)}</option>` : ''
+
   openSheet(f ? '编辑文件' : '添加文件',
     `<label class="dev-field col"><span>显示名称</span>
-       <input id="flName" type="text" placeholder="下载页上显示的名字" value="${esc(f ? f.name : '')}"></label>
+       <input id="flName" type="text" placeholder="选完文件自动填，可以改" value="${esc(f ? f.name : '')}"></label>
+     <label class="dev-field col"><span>文件夹</span>
+       <select id="flFolder">
+         <option value=""${cur === '' ? ' selected' : ''}>未分类（直接放在 files/ 下）</option>
+         ${orphan}${known.map(c => `<option value="${esc(c.name)}"${cur === c.name ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}
+         <option value="__new">＋ 新建文件夹…</option>
+       </select></label>
+     <label class="dev-field col" id="flNewWrap" hidden><span>新文件夹名</span>
+       <input id="flNewFolder" type="text" placeholder="比如 game、联机补丁"></label>
      <label class="dev-field col"><span>路径</span>
-       <input id="flHref" type="text" placeholder="./files/xxx.pdf" value="${esc(f ? (f.file || '') : '')}"></label>
+       <input id="flHref" type="text"${isNew ? ' readonly' : ''}
+              placeholder="选完文件自动拼成 ./files/文件夹/文件名"
+              value="${esc(f ? (f.file || '') : '')}"></label>
      <label class="dev-field col"><span>大小</span>
-       <input id="flSize" type="text" placeholder="如 1.2 MB，可留空" value="${esc(f ? (f.size || '') : '')}"></label>
+       <input id="flSize" type="text"${isNew ? ' readonly' : ''}
+              placeholder="选完文件自动算" value="${esc(f ? (f.size || '') : '')}"></label>
      <label class="dev-field col"><span>说明</span>
        <input id="flDesc" type="text" placeholder="一句话说明这个文件是什么" value="${esc(f ? (f.desc || '') : '')}"></label>
      <div class="dev-upload">
        <label class="dev-btn dev-up">上传文件本体<input type="file" data-file-up="1"></label>
-       <span class="dev-hint" id="flHint">不上传也行 —— 只填路径的话，
-         文件还是得自己放进 <code>files/</code> 文件夹。</span>
+       <span class="dev-hint" id="flHint">⚠️ 上传只是把文件存进<strong>你这台电脑的浏览器</strong>里，
+         别人打开网站是下不到的 —— 想让所有人都能下，文件还得自己放进
+         <code>files/</code> 文件夹再部署。</span>
      </div>
      <p class="dev-err" id="flErr" hidden></p>`,
     [{ label: '保存', on: saveFile }, { label: '取消', ghost: true, on: closeSheet }])
+}
+
+/* 路径框跟着「文件夹 + 上传的文件名」重拼。只在新建时动手 ——
+   编辑态那个框是留给人填的，自动去改会把人家写的网盘外链冲掉。 */
+function syncFilePath(){
+  const href = $('#flHref')
+  if(!href || !href.readOnly) return
+  const box = $('#flFolder')
+  if(!box) return
+  const nf = $('#flNewFolder')
+  let folder = box.value === '__new' ? ((nf && nf.value) || '') : box.value
+  folder = folder.trim().replace(/^\/+|\/+$/g, '')
+  const raw = filePending ? filePending.raw : ''
+  href.value = raw ? './files/' + (folder ? folder + '/' : '') + raw : ''
 }
 
 /* ---------- 文章编辑 ---------- */
@@ -696,13 +734,31 @@ function saveFile(){
   if(all.some(f => f.name === name && f.name !== old))
     return fieldError('flErr', '已经有一个同名的文件了，换个名字。')
 
+  /* 文件夹：选了「＋ 新建文件夹…」就取旁边那个输入框的值，其余情况直接用下拉的。
+     下拉永远给得出一个合法值（最差是空串 = 未分类），不用再判有没有填。 */
+  const box = $('#flFolder')
+  const nf = $('#flNewFolder')
+  const picked = box ? (box.value === '__new' ? ((nf && nf.value) || '') : box.value) : ''
+  const folderIn = picked.trim().replace(/^\/+|\/+$/g, '')
+
+  /* 路径优先 —— 文件夹是跟着文件实际待的地方走的。新建时这个框已经自动拼好了
+     （见 syncFilePath），这儿只是兜底：用户把它清空了，或者压根没选文件。 */
+  let file = ($('#flHref').value || '').trim()
+  if(!file && folderIn && filePending) file = './files/' + folderIn + '/' + filePending.raw
+  if(!file && folderIn) file = './files/' + folderIn + '/' + name
+  const folder = folderOf({ file }) || folderIn
+
   const fields = {
     name,
+    folder,
+    file,
     size: ($('#flSize').value || '').trim(),
-    file: ($('#flHref').value || '').trim(),
     desc: ($('#flDesc').value || '').trim()
   }
   if(filePending && !fields.size) fields.size = humanSize(filePending.bytes)
+  /* 上传时间只在新条目上盖一次 —— 下载页按时间排序靠它。编辑时**不加**这个字段：
+     devUpdateFile 是 Object.assign 合进去的，不写就保留原来的时间戳。 */
+  if(!old) fields.time = nowStamp()
 
   if(filePending){
     const bad = setFileData(name, filePending.dataUrl)
@@ -951,6 +1007,22 @@ function bootDev(){
 
     sheet.addEventListener('change', e => {
       const t = e.target
+
+      /* 文件夹下拉：选了「＋ 新建文件夹…」就把输入框露出来，然后重拼路径。
+         ⚠️ 必须放在下面 t.files 那句判断**前面** —— select 身上没有 files，
+         先撞上那句 return 就轮不到这儿了。 */
+      if(t.closest('#flFolder')){
+        const wrap = $('#flNewWrap')
+        if(wrap) wrap.hidden = t.value !== '__new'
+        if(t.value === '__new'){
+          const nf = $('#flNewFolder')
+          if(nf) nf.focus()
+        }
+        syncFilePath()
+        return
+      }
+      if(t.closest('#flNewFolder')){ syncFilePath(); return }
+
       if(!t.files || !t.files[0]) return
       const f = t.files[0]
 
@@ -983,12 +1055,17 @@ function bootDev(){
       if(t.closest('[data-file-up]')){
         readAnyFile(f, 1920, (bad, url) => {
           if(bad) return sheetError(bad)
-          filePending = { dataUrl: url, bytes: f.size }
+          filePending = { dataUrl: url, bytes: f.size, raw: f.name }
           const h = $('#flHint')
           if(h) h.innerHTML = '已选好 <b>' + esc(f.name) + '</b>（' + humanSize(f.size) +
             '）—— 点「保存」才会真的存进来。'
+          /* 名字默认取文件名去掉后缀，大小直接填上，路径跟着重拼。
+             ⚠️ 只填**空着的**框，不覆盖 —— 先打了名字再选文件的话，得留住他打的。 */
           const n = $('#flName')
-          if(n && !n.value.trim()) n.value = f.name
+          if(n && !n.value.trim()) n.value = stemOf(f.name)
+          const sz = $('#flSize')
+          if(sz && !sz.value.trim()) sz.value = humanSize(f.size)
+          syncFilePath()
         })
       }
     })
