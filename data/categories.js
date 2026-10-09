@@ -14,9 +14,9 @@
    key 要和文章里的 cat 字段对上；文章 cat 填了这里没有的值，就只在标签里能找到
    ========================================================================== */
 const CATEGORIES = [
-  { key: 'tech',  name: '技术手札', icon: 'tech',  desc: '代码与 Bug 的爱恨情仇' },
-  { key: 'life',  name: '随笔杂谈', icon: 'life',  desc: '生活琐事与碎碎念' },
-  { key: 'notes', name: '学习笔记', icon: 'notes', desc: '看过的东西记一笔' },
-  { key: 'works', name: '作品集',   icon: 'works', desc: '我做的东西' }
+  { key: 'tech',  name: '技术手札', icon: 'tech',  desc: '真赝相爱' },
+  { key: 'life',  name: '随笔杂谈', icon: 'life',  desc: '无量空处' },
+  { key: 'notes', name: '学习笔记', icon: 'notes', desc: '伏魔御厨' },
+  { key: 'works', name: '作品集',   icon: 'works', desc: '伏诛赐死' }
 ]
 

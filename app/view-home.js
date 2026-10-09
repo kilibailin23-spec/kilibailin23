@@ -32,7 +32,7 @@ ${bannerHTML()}
         <div class="home-about">
           <div class="ha-figure">
             <div class="ha-avatar" id="haAvatar" role="button" tabindex="0"
-                 title="点一下翻面" aria-label="头像，点一下翻面">
+                 title="有反转" aria-label="还有反转！">
               <div class="ha-flip">${avatar}</div>
             </div>
             ${SITE.avatarName ? `<p class="ha-name">${esc(SITE.avatarName)}</p>` : ''}
@@ -49,7 +49,7 @@ ${bannerHTML()}
         </div>
 
         <div class="home-contact">
-          <span class="hc-title">联系我</span>
+          <span class="hc-title">call me</span>
           ${SITE.email ? `<a href="mailto:${esc(SITE.email)}">${esc(SITE.email)}</a>` : ''}
           ${SITE.github ? `<a href="${esc(SITE.github)}" target="_blank" rel="noopener">GitHub</a>` : ''}
           <span class="hc-note">${esc(SITE.tagline || '')}</span>
